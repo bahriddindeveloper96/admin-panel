@@ -200,6 +200,8 @@ export default {
     }
 
     const updateSalesChart = () => {
+      if (!salesChartRef.value) return
+
       if (salesChart) {
         salesChart.destroy()
       }
@@ -219,12 +221,19 @@ export default {
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
         }
       })
     }
 
     const updateOrderStatusChart = () => {
+      if (!orderStatusChartRef.value) return
+
       if (orderStatusChart) {
         orderStatusChart.destroy()
       }
@@ -239,8 +248,8 @@ export default {
             backgroundColor: [
               '#28a745',
               '#ffc107',
-              '#dc3545',
-              '#17a2b8'
+              '#17a2b8',
+              '#dc3545'
             ]
           }]
         },

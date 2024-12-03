@@ -21,7 +21,7 @@ export default {
       if (token) {
         store.commit('SET_TOKEN', token)
         try {
-          await store.dispatch('fetchUser')
+          await store.dispatch('getUser')
         } catch (error) {
           store.commit('SET_TOKEN', null)
         }

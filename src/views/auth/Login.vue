@@ -94,16 +94,13 @@ export default {
           password: form.value.password
         })
         
-        if (store.getters.isAdmin) {
-          router.push('/')
-        } else {
-          throw new Error('Unauthorized. Admin access required.')
-        }
+        // After successful login, redirect to dashboard
+        router.push('/')
       } catch (error) {
         Swal.fire({
           icon: 'error',
           title: 'Login Failed',
-          text: error.response?.data?.message || error.message || 'Invalid credentials'
+          text: error.response?.data?.message || 'Invalid credentials'
         })
       } finally {
         loading.value = false

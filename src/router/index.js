@@ -122,15 +122,15 @@ const router = createRouter({
   routes
 })
 
+// Navigation guard
 router.beforeEach((to, from, next) => {
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!store.getters.isAuthenticated) {
-      next({ name: 'login' })
-    } else if (!store.getters.isAdmin) {
-      next({ name: 'login' })
-    } else {
-      next()
-    }
+  const isAuthenticated = store.getters.isAuthenticated
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+
+  if (requiresAuth && !isAuthenticated) {
+    next('/auth/login')
+  } else if (to.path === '/auth/login' && isAuthenticated) {
+    next('/')
   } else {
     next()
   }

@@ -12,7 +12,11 @@ export default createStore({
     salesChart: null,
     orderStatusChart: null,
     recentOrders: [],
-    topProducts: []
+    topProducts: [],
+
+    // Users
+    users: [],
+    totalUsers: 0
   },
   
   mutations: {
@@ -22,7 +26,11 @@ export default createStore({
     },
     SET_TOKEN(state, token) {
       state.token = token
-      localStorage.setItem('token', token)
+      if (token) {
+        localStorage.setItem('token', token)
+      } else {
+        localStorage.removeItem('token')
+      }
     },
     CLEAR_AUTH(state) {
       state.user = null
@@ -45,6 +53,26 @@ export default createStore({
     },
     SET_TOP_PRODUCTS(state, products) {
       state.topProducts = products
+    },
+    
+    // Users mutations
+    SET_USERS(state, users) {
+      state.users = users
+    },
+    SET_TOTAL_USERS(state, total) {
+      state.totalUsers = total
+    },
+    ADD_USER(state, user) {
+      state.users.unshift(user)
+    },
+    UPDATE_USER(state, updatedUser) {
+      const index = state.users.findIndex(user => user.id === updatedUser.id)
+      if (index !== -1) {
+        state.users.splice(index, 1, updatedUser)
+      }
+    },
+    DELETE_USER(state, userId) {
+      state.users = state.users.filter(user => user.id !== userId)
     }
   },
   
@@ -52,18 +80,19 @@ export default createStore({
     // Auth actions
     async login({ commit }, credentials) {
       try {
-        const { data } = await axios.post('/api/admin/login', credentials)
-        commit('SET_USER', data.user)
+        const { data } = await axios.post('/admin/login', credentials)
         commit('SET_TOKEN', data.token)
+        commit('SET_USER', data.user)
         return data
       } catch (error) {
+        commit('CLEAR_AUTH')
         throw error
       }
     },
     
     async logout({ commit }) {
       try {
-        await axios.post('/api/admin/logout')
+        await axios.post('/admin/logout')
         commit('CLEAR_AUTH')
       } catch (error) {
         throw error
@@ -72,17 +101,18 @@ export default createStore({
     
     async getUser({ commit }) {
       try {
-        const { data } = await axios.get('/api/admin/user')
-        commit('SET_USER', data.user)
-        return data.user
+        const { data } = await axios.get('/admin/auth/user')
+        commit('SET_USER', data)
+        return data
       } catch (error) {
+        commit('CLEAR_AUTH')
         throw error
       }
     },
     
     async updateProfile({ commit }, profileData) {
       try {
-        const { data } = await axios.put('/api/admin/profile', profileData)
+        const { data } = await axios.put('/admin/profile', profileData)
         commit('SET_USER', data.user)
         return data
       } catch (error) {
@@ -100,53 +130,103 @@ export default createStore({
         dispatch('fetchTopProducts')
       ])
     },
-    
+
     async fetchStatistics({ commit }) {
       try {
-        const { data } = await axios.get('/api/admin/dashboard/statistics')
+        const { data } = await axios.get('/admin/dashboard/stats')
         commit('SET_STATISTICS', data)
         return data
       } catch (error) {
         throw error
       }
     },
-    
+
     async fetchSalesChart({ commit }, days = 7) {
       try {
-        const { data } = await axios.get('/api/admin/dashboard/sales-chart', {
-          params: { days }
-        })
+        const { data } = await axios.get('/admin/dashboard/chart-data', { params: { days } })
         commit('SET_SALES_CHART', data)
         return data
       } catch (error) {
         throw error
       }
     },
-    
+
     async fetchOrderStatusChart({ commit }) {
       try {
-        const { data } = await axios.get('/api/admin/dashboard/order-status-chart')
+        const { data } = await axios.get('/admin/dashboard/chart-data')
         commit('SET_ORDER_STATUS_CHART', data)
         return data
       } catch (error) {
         throw error
       }
     },
-    
+
     async fetchRecentOrders({ commit }) {
       try {
-        const { data } = await axios.get('/api/admin/dashboard/recent-orders')
-        commit('SET_RECENT_ORDERS', data)
+        const { data } = await axios.get('/admin/orders?limit=5')
+        commit('SET_RECENT_ORDERS', data.data)
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async fetchTopProducts({ commit }) {
+      try {
+        const { data } = await axios.get('/admin/products?sort=-sales&limit=5')
+        commit('SET_TOP_PRODUCTS', data.data)
         return data
       } catch (error) {
         throw error
       }
     },
     
-    async fetchTopProducts({ commit }) {
+    // Users actions
+    async fetchUsers({ commit }, params = {}) {
       try {
-        const { data } = await axios.get('/api/admin/dashboard/top-products')
-        commit('SET_TOP_PRODUCTS', data)
+        const { data } = await axios.get('/admin/users', { params })
+        commit('SET_USERS', data.data)
+        commit('SET_TOTAL_USERS', data.total)
+        return data
+      } catch (error) {
+        console.error('Error fetching users:', error)
+        throw error
+      }
+    },
+
+    async createUser({ commit }, userData) {
+      try {
+        const { data } = await axios.post('/admin/users', userData)
+        commit('ADD_USER', data.user)
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async updateUser({ commit }, { id, userData }) {
+      try {
+        const { data } = await axios.put(`/admin/users/${id}`, userData)
+        commit('UPDATE_USER', data.user)
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async deleteUser({ commit }, id) {
+      try {
+        await axios.delete(`/admin/users/${id}`)
+        commit('DELETE_USER', id)
+      } catch (error) {
+        throw error
+      }
+    },
+
+    async toggleUserStatus({ commit }, id) {
+      try {
+        const { data } = await axios.post(`/admin/users/${id}/toggle-active`)
+        commit('UPDATE_USER', data.user)
         return data
       } catch (error) {
         throw error
@@ -156,11 +236,14 @@ export default createStore({
   
   getters: {
     isAuthenticated: state => !!state.token,
+    isAdmin: state => state.user?.role === 'admin',
     user: state => state.user,
     statistics: state => state.statistics,
     salesChart: state => state.salesChart,
     orderStatusChart: state => state.orderStatusChart,
     recentOrders: state => state.recentOrders,
-    topProducts: state => state.topProducts
+    topProducts: state => state.topProducts,
+    users: state => state.users,
+    totalUsers: state => state.totalUsers
   }
 })
