@@ -1,5 +1,7 @@
 import { createStore } from 'vuex'
 import axios from 'axios'
+import products from './modules/products'
+import categories from './modules/categories'
 
 export default createStore({
   state: {
@@ -24,6 +26,7 @@ export default createStore({
     SET_USER(state, user) {
       state.user = user
     },
+    
     SET_TOKEN(state, token) {
       state.token = token
       if (token) {
@@ -32,45 +35,54 @@ export default createStore({
         localStorage.removeItem('token')
       }
     },
+
     CLEAR_AUTH(state) {
       state.user = null
       state.token = null
       localStorage.removeItem('token')
     },
-    
+
     // Dashboard mutations
-    SET_STATISTICS(state, data) {
-      state.statistics = data
+    SET_STATISTICS(state, stats) {
+      state.statistics = stats
     },
+
     SET_SALES_CHART(state, data) {
       state.salesChart = data
     },
+
     SET_ORDER_STATUS_CHART(state, data) {
       state.orderStatusChart = data
     },
+
     SET_RECENT_ORDERS(state, orders) {
       state.recentOrders = orders
     },
+
     SET_TOP_PRODUCTS(state, products) {
       state.topProducts = products
     },
-    
+
     // Users mutations
     SET_USERS(state, users) {
       state.users = users
     },
+
     SET_TOTAL_USERS(state, total) {
       state.totalUsers = total
     },
+
     ADD_USER(state, user) {
       state.users.unshift(user)
     },
+
     UPDATE_USER(state, updatedUser) {
       const index = state.users.findIndex(user => user.id === updatedUser.id)
       if (index !== -1) {
         state.users.splice(index, 1, updatedUser)
       }
     },
+
     DELETE_USER(state, userId) {
       state.users = state.users.filter(user => user.id !== userId)
     }
@@ -80,16 +92,17 @@ export default createStore({
     // Auth actions
     async login({ commit }, credentials) {
       try {
-        const { data } = await axios.post('/admin/login', credentials)
+        const { data } = await axios.post('/auth/login', credentials)
         commit('SET_TOKEN', data.token)
         commit('SET_USER', data.user)
+        // Set token in axios default headers
+        axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
         return data
       } catch (error) {
-        commit('CLEAR_AUTH')
         throw error
       }
     },
-    
+
     async logout({ commit }) {
       try {
         // API call to logout
@@ -105,7 +118,7 @@ export default createStore({
         delete axios.defaults.headers.common['Authorization']
       }
     },
-    
+
     async getUser({ commit }) {
       try {
         const { data } = await axios.get('/admin/auth/user')
@@ -116,17 +129,7 @@ export default createStore({
         throw error
       }
     },
-    
-    async updateProfile({ commit }, profileData) {
-      try {
-        const { data } = await axios.put('/admin/profile', profileData)
-        commit('SET_USER', data.user)
-        return data
-      } catch (error) {
-        throw error
-      }
-    },
-    
+
     // Dashboard actions
     async fetchDashboardData({ dispatch }) {
       await Promise.all([
@@ -160,7 +163,7 @@ export default createStore({
 
     async fetchOrderStatusChart({ commit }) {
       try {
-        const { data } = await axios.get('/admin/dashboard/chart-data')
+        const { data } = await axios.get('/admin/dashboard/order-status')
         commit('SET_ORDER_STATUS_CHART', data)
         return data
       } catch (error) {
@@ -187,7 +190,7 @@ export default createStore({
         throw error
       }
     },
-    
+
     // Users actions
     async fetchUsers({ commit }, params = {}) {
       try {
@@ -196,7 +199,6 @@ export default createStore({
         commit('SET_TOTAL_USERS', data.total)
         return data
       } catch (error) {
-        console.error('Error fetching users:', error)
         throw error
       }
     },
@@ -230,10 +232,10 @@ export default createStore({
       }
     },
 
-    async toggleUserStatus({ commit }, id) {
+    async updateProfile({ commit }, profileData) {
       try {
-        const { data } = await axios.post(`/admin/users/${id}/toggle-active`)
-        commit('UPDATE_USER', data.user)
+        const { data } = await axios.put('/admin/profile', profileData)
+        commit('SET_USER', data.user)
         return data
       } catch (error) {
         throw error
@@ -252,5 +254,10 @@ export default createStore({
     topProducts: state => state.topProducts,
     users: state => state.users,
     totalUsers: state => state.totalUsers
+  },
+
+  modules: {
+    products,
+    categories
   }
 })

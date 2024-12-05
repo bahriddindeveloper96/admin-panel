@@ -5,8 +5,8 @@
       <div class="col-lg-3 col-6">
         <div class="small-box">
           <div class="inner">
-            <h3>{{ statistics?.totalOrders || 0 }}</h3>
-            <p>{{ $t('dashboard.total_orders') }}</p>
+            <h3>{{ statistics?.new_orders || 0 }}</h3>
+            <p>{{ $t('dashboard.new_orders') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-shopping-cart"></i>
@@ -17,7 +17,7 @@
       <div class="col-lg-3 col-6">
         <div class="small-box">
           <div class="inner">
-            <h3>{{ statistics?.totalProducts || 0 }}</h3>
+            <h3>{{ statistics?.active_products || 0 }}</h3>
             <p>{{ $t('dashboard.products') }}</p>
           </div>
           <div class="icon">
@@ -29,8 +29,8 @@
       <div class="col-lg-3 col-6">
         <div class="small-box">
           <div class="inner">
-            <h3>{{ statistics?.totalUsers || 0 }}</h3>
-            <p>{{ $t('dashboard.users') }}</p>
+            <h3>{{ statistics?.new_users || 0 }}</h3>
+            <p>{{ $t('dashboard.new_users') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-users"></i>
@@ -41,11 +41,11 @@
       <div class="col-lg-3 col-6">
         <div class="small-box">
           <div class="inner">
-            <h3>${{ statistics?.totalRevenue || 0 }}</h3>
-            <p>{{ $t('dashboard.revenue') }}</p>
+            <h3>{{ statistics?.pending_reviews || 0 }}</h3>
+            <p>{{ $t('dashboard.pending_reviews') }}</p>
           </div>
           <div class="icon">
-            <i class="fas fa-dollar-sign"></i>
+            <i class="fas fa-comments"></i>
           </div>
         </div>
       </div>

@@ -1,23 +1,23 @@
 import axios from 'axios'
 
 const state = {
-  products: [],
+  products: {
+    data: [],
+    total: 0,
+    per_page: 10,
+    current_page: 1,
+    links: []
+  },
   product: null,
   loading: false,
-  error: null,
-  totalProducts: 0,
-  currentPage: 1,
-  perPage: 10
+  error: null
 }
 
 const getters = {
   getProducts: state => state.products,
   getProduct: state => state.product,
   isLoading: state => state.loading,
-  getError: state => state.error,
-  getTotalProducts: state => state.totalProducts,
-  getCurrentPage: state => state.currentPage,
-  getPerPage: state => state.perPage
+  getError: state => state.error
 }
 
 const actions = {
@@ -26,11 +26,15 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       const response = await axios.get('/admin/products', { params })
-      commit('SET_PRODUCTS', response.data.data)
-      commit('SET_TOTAL_PRODUCTS', response.data.total)
-      commit('SET_CURRENT_PAGE', response.data.current_page)
-      commit('SET_PER_PAGE', response.data.per_page)
-      return response.data
+      const products = response.data?.products || {
+        data: [],
+        total: 0,
+        per_page: 10,
+        current_page: 1,
+        links: []
+      }
+      commit('SET_PRODUCTS', products)
+      return products
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to fetch products')
       throw error
@@ -104,7 +108,7 @@ const actions = {
   },
 
   // Bulk delete products
-  async bulkDeleteProducts({ commit }, ids) {
+  async deleteProducts({ commit }, ids) {
     try {
       commit('SET_LOADING', true)
       await axios.post('/admin/products/bulk-delete', { ids })
@@ -155,15 +159,6 @@ const mutations = {
   },
   SET_ERROR(state, error) {
     state.error = error
-  },
-  SET_TOTAL_PRODUCTS(state, total) {
-    state.totalProducts = total
-  },
-  SET_CURRENT_PAGE(state, page) {
-    state.currentPage = page
-  },
-  SET_PER_PAGE(state, perPage) {
-    state.perPage = perPage
   },
   CLEAR_ERROR(state) {
     state.error = null
