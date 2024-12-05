@@ -14,6 +14,7 @@
 
         <!-- Right navbar links -->
         <ul class="navbar-nav ml-auto">
+          <language-switcher />
           <!-- User Dropdown Menu -->
           <li class="nav-item dropdown">
             <a class="nav-link d-flex align-items-center" data-toggle="dropdown" href="#">
@@ -24,14 +25,14 @@
             </a>
             <div class="dropdown-menu dropdown-menu-right">
               <router-link to="/profile" class="dropdown-item">
-                <i class="fas fa-user mr-2"></i> Profile
+                <i class="fas fa-user mr-2"></i> {{ $t('auth.profile') }}
               </router-link>
               <router-link to="/settings" class="dropdown-item">
-                <i class="fas fa-cog mr-2"></i> Settings
+                <i class="fas fa-cog mr-2"></i> {{ $t('auth.settings') }}
               </router-link>
               <div class="dropdown-divider"></div>
               <a href="#" class="dropdown-item" @click.prevent="logout">
-                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                <i class="fas fa-sign-out-alt mr-2"></i> {{ $t('auth.logout') }}
               </a>
             </div>
           </li>
@@ -54,43 +55,43 @@
             <li class="nav-item">
               <router-link to="/" class="nav-link" exact>
                 <i class="nav-icon fas fa-tachometer-alt"></i>
-                <p>Dashboard</p>
+                <p>{{ $t('menu.dashboard') }}</p>
               </router-link>
             </li>
             <li class="nav-item">
               <router-link to="/users" class="nav-link">
                 <i class="nav-icon fas fa-users"></i>
-                <p>Users</p>
+                <p>{{ $t('menu.users') }}</p>
               </router-link>
             </li>
             <li class="nav-item">
               <router-link to="/orders" class="nav-link">
                 <i class="nav-icon fas fa-shopping-cart"></i>
-                <p>Orders</p>
+                <p>{{ $t('menu.orders') }}</p>
               </router-link>
             </li>
             <li class="nav-item">
               <router-link to="/products" class="nav-link">
                 <i class="nav-icon fas fa-box"></i>
-                <p>Products</p>
+                <p>{{ $t('menu.products') }}</p>
               </router-link>
             </li>
             <li class="nav-item">
               <router-link to="/categories" class="nav-link">
                 <i class="nav-icon fas fa-tags"></i>
-                <p>Categories</p>
+                <p>{{ $t('menu.categories') }}</p>
               </router-link>
             </li>
             <li class="nav-item">
               <router-link to="/reports" class="nav-link">
                 <i class="nav-icon fas fa-chart-bar"></i>
-                <p>Reports</p>
+                <p>{{ $t('menu.reports') }}</p>
               </router-link>
             </li>
             <li class="nav-item">
               <router-link to="/settings" class="nav-link">
                 <i class="nav-icon fas fa-cog"></i>
-                <p>Settings</p>
+                <p>{{ $t('menu.settings') }}</p>
               </router-link>
             </li>
           </ul>
@@ -119,9 +120,13 @@
 import { computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
 export default {
   name: 'AdminLayout',
+  components: {
+    LanguageSwitcher
+  },
   setup() {
     const store = useStore()
     const router = useRouter()

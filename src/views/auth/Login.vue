@@ -1,61 +1,66 @@
 <template>
   <div class="login-page">
     <div class="login-box">
-      <div class="login-logo">
-        <h1>Admin Panel</h1>
-      </div>
       <div class="card">
-        <div class="card-body">
-          <p class="login-box-msg">Sign in to start your session</p>
+        <div class="card-body login-card-body">
+          <p class="login-box-msg">{{ $t('auth.login') }}</p>
+
           <form @submit.prevent="handleLogin">
-            <div class="form-group">
-              <div class="input-group">
-                <input
-                  type="email"
-                  class="form-control"
-                  placeholder="Email"
-                  v-model="email"
-                  required
-                >
-                <div class="input-group-append">
-                  <div class="input-group-text">
-                    <i class="fas fa-envelope"></i>
-                  </div>
+            <div class="input-group mb-3">
+              <input
+                type="email"
+                class="form-control"
+                :placeholder="$t('auth.email')"
+                v-model="form.email"
+                required
+              >
+              <div class="input-group-append">
+                <div class="input-group-text">
+                  <span class="fas fa-envelope"></span>
                 </div>
               </div>
             </div>
-            <div class="form-group">
-              <div class="input-group">
-                <input
-                  :type="showPassword ? 'text' : 'password'"
-                  class="form-control"
-                  placeholder="Password"
-                  v-model="password"
-                  required
-                >
-                <div class="input-group-append">
-                  <div class="input-group-text cursor-pointer" @click="togglePassword">
-                    <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                  </div>
+            <div class="input-group mb-3">
+              <input
+                type="password"
+                class="form-control"
+                :placeholder="$t('auth.password')"
+                v-model="form.password"
+                required
+              >
+              <div class="input-group-append">
+                <div class="input-group-text">
+                  <span class="fas fa-lock"></span>
                 </div>
               </div>
             </div>
             <div class="row">
               <div class="col-8">
-                <div class="custom-control custom-checkbox">
-                  <input type="checkbox" class="custom-control-input" id="remember" v-model="remember">
-                  <label class="custom-control-label" for="remember">Remember Me</label>
+                <div class="icheck-primary">
+                  <input type="checkbox" id="remember" v-model="form.remember">
+                  <label for="remember">
+                    {{ $t('auth.remember') }}
+                  </label>
                 </div>
               </div>
               <div class="col-4">
                 <button type="submit" class="btn btn-primary btn-block" :disabled="loading">
-                  <span v-if="loading" class="spinner-border spinner-border-sm mr-2"></span>
-                  Sign In
+                  {{ loading ? '...' : $t('auth.login') }}
                 </button>
               </div>
             </div>
           </form>
+
+          <p class="mb-1">
+            <a href="#" @click.prevent="forgotPassword">
+              {{ $t('auth.forgot_password') }}
+            </a>
+          </p>
         </div>
+      </div>
+      
+      <div class="text-center mt-3">
+        <language-switcher />
       </div>
     </div>
   </div>
@@ -65,53 +70,44 @@
 import { ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import Swal from 'sweetalert2'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
 export default {
   name: 'Login',
+  components: {
+    LanguageSwitcher
+  },
   setup() {
     const store = useStore()
     const router = useRouter()
-    
-    const email = ref('')
-    const password = ref('')
-    const remember = ref(false)
     const loading = ref(false)
-    const showPassword = ref(false)
+    const form = ref({
+      email: '',
+      password: '',
+      remember: false
+    })
 
     const handleLogin = async () => {
-      loading.value = true
       try {
-        await store.dispatch('login', {
-          email: email.value,
-          password: password.value,
-          remember: remember.value
-        })
+        loading.value = true
+        await store.dispatch('login', form.value)
         router.push('/')
       } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: error.response?.data?.message || 'Something went wrong',
-          confirmButtonText: 'Try Again'
-        })
+        console.error('Login error:', error)
       } finally {
         loading.value = false
       }
     }
 
-    const togglePassword = () => {
-      showPassword.value = !showPassword.value
+    const forgotPassword = () => {
+      router.push('/auth/forgot-password')
     }
 
     return {
-      email,
-      password,
-      remember,
+      form,
       loading,
-      showPassword,
       handleLogin,
-      togglePassword
+      forgotPassword
     }
   }
 }
@@ -130,18 +126,6 @@ export default {
   width: 100%;
   max-width: 400px;
   padding: 1rem;
-}
-
-.login-logo {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.login-logo h1 {
-  color: var(--primary-color);
-  font-weight: 600;
-  font-size: 2rem;
-  margin: 0;
 }
 
 .card {

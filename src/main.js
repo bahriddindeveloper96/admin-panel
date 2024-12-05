@@ -2,9 +2,15 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import i18n from './i18n'
 import axios from 'axios'
+
+// Bootstrap va AdminLTE
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+import 'admin-lte/dist/css/adminlte.min.css'
 import 'admin-lte/dist/js/adminlte.min.js'
-import '@fortawesome/fontawesome-free/js/all.min.js'
+import '@fortawesome/fontawesome-free/css/all.min.css'
 
 // Set axios defaults
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -32,6 +38,10 @@ axios.interceptors.response.use(
 )
 
 const app = createApp(App)
+
+// Use plugins
 app.use(router)
 app.use(store)
+app.use(i18n)
+
 app.mount('#app')

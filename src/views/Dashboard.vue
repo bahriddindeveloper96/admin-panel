@@ -6,7 +6,7 @@
         <div class="small-box">
           <div class="inner">
             <h3>{{ statistics?.totalOrders || 0 }}</h3>
-            <p>Total Orders</p>
+            <p>{{ $t('dashboard.total_orders') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-shopping-cart"></i>
@@ -18,7 +18,7 @@
         <div class="small-box">
           <div class="inner">
             <h3>{{ statistics?.totalProducts || 0 }}</h3>
-            <p>Products</p>
+            <p>{{ $t('dashboard.products') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-box"></i>
@@ -30,7 +30,7 @@
         <div class="small-box">
           <div class="inner">
             <h3>{{ statistics?.totalUsers || 0 }}</h3>
-            <p>Users</p>
+            <p>{{ $t('dashboard.users') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-users"></i>
@@ -42,7 +42,7 @@
         <div class="small-box">
           <div class="inner">
             <h3>${{ statistics?.totalRevenue || 0 }}</h3>
-            <p>Revenue</p>
+            <p>{{ $t('dashboard.revenue') }}</p>
           </div>
           <div class="icon">
             <i class="fas fa-dollar-sign"></i>
@@ -56,7 +56,7 @@
       <div class="col-lg-8">
         <div class="card chart-container">
           <div class="card-header">
-            <h3 class="card-title">Sales Overview</h3>
+            <h3 class="card-title">{{ $t('dashboard.sales_overview') }}</h3>
           </div>
           <div class="card-body">
             <canvas ref="salesChart"></canvas>
@@ -67,7 +67,7 @@
       <div class="col-lg-4">
         <div class="card chart-container">
           <div class="card-header">
-            <h3 class="card-title">Order Status</h3>
+            <h3 class="card-title">{{ $t('dashboard.order_status') }}</h3>
           </div>
           <div class="card-body">
             <canvas ref="orderStatusChart"></canvas>
@@ -81,18 +81,18 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Recent Orders</h3>
+            <h3 class="card-title">{{ $t('dashboard.recent_orders') }}</h3>
           </div>
           <div class="card-body table-responsive p-0">
             <table class="table">
               <thead>
                 <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Products</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Date</th>
+                  <th>{{ $t('common.order_id') }}</th>
+                  <th>{{ $t('common.customer') }}</th>
+                  <th>{{ $t('common.products') }}</th>
+                  <th>{{ $t('common.total') }}</th>
+                  <th>{{ $t('common.status') }}</th>
+                  <th>{{ $t('common.date') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -103,7 +103,7 @@
                   <td>${{ order.total }}</td>
                   <td>
                     <span :class="getStatusBadgeClass(order.status)">
-                      {{ order.status }}
+                      {{ $t(`orders.status.${order.status}`) }}
                     </span>
                   </td>
                   <td>{{ formatDate(order.date) }}</td>
