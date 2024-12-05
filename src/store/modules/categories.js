@@ -19,7 +19,7 @@ const actions = {
   async fetchCategories({ commit }) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.get('/api/categories')
+      const response = await axios.get('/admin/categories')
       commit('SET_CATEGORIES', response.data)
       return response.data
     } catch (error) {
@@ -34,7 +34,7 @@ const actions = {
   async fetchCategory({ commit }, id) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.get(`/api/categories/${id}`)
+      const response = await axios.get(`/admin/categories/${id}`)
       commit('SET_CATEGORY', response.data)
       return response.data
     } catch (error) {
@@ -49,7 +49,7 @@ const actions = {
   async createCategory({ commit }, categoryData) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.post('/api/categories', categoryData)
+      const response = await axios.post('/admin/categories', categoryData)
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to create category')
@@ -63,7 +63,7 @@ const actions = {
   async updateCategory({ commit }, { id, categoryData }) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.put(`/api/categories/${id}`, categoryData)
+      const response = await axios.put(`/admin/categories/${id}`, categoryData)
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to update category')
@@ -77,7 +77,7 @@ const actions = {
   async deleteCategory({ commit }, id) {
     try {
       commit('SET_LOADING', true)
-      await axios.delete(`/api/categories/${id}`)
+      await axios.delete(`/admin/categories/${id}`)
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to delete category')
       throw error
