@@ -1,164 +1,115 @@
 <template>
-  <div class="content-wrapper">
-    <div class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-sm-6">
-            <h1 class="m-0">Dashboard</h1>
+  <div class="dashboard fade-in">
+    <!-- Stats Cards -->
+    <div class="row">
+      <div class="col-lg-3 col-6">
+        <div class="small-box">
+          <div class="inner">
+            <h3>{{ statistics?.totalOrders || 0 }}</h3>
+            <p>Total Orders</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-6">
+        <div class="small-box">
+          <div class="inner">
+            <h3>{{ statistics?.totalProducts || 0 }}</h3>
+            <p>Products</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-box"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-6">
+        <div class="small-box">
+          <div class="inner">
+            <h3>{{ statistics?.totalUsers || 0 }}</h3>
+            <p>Users</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-6">
+        <div class="small-box">
+          <div class="inner">
+            <h3>${{ statistics?.totalRevenue || 0 }}</h3>
+            <p>Revenue</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-dollar-sign"></i>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="content">
-      <div class="container-fluid">
-        <!-- Statistics Cards -->
-        <div class="row">
-          <div class="col-lg-3 col-6">
-            <div class="small-box bg-info">
-              <div class="inner">
-                <h3>{{ formatCurrency(statistics?.total_sales || 0) }}</h3>
-                <p>Total Sales</p>
-              </div>
-              <div class="icon">
-                <i class="fas fa-shopping-cart"></i>
-              </div>
-            </div>
+    <!-- Charts -->
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card chart-container">
+          <div class="card-header">
+            <h3 class="card-title">Sales Overview</h3>
           </div>
-          
-          <div class="col-lg-3 col-6">
-            <div class="small-box bg-success">
-              <div class="inner">
-                <h3>{{ statistics?.total_orders || 0 }}</h3>
-                <p>Total Orders</p>
-              </div>
-              <div class="icon">
-                <i class="fas fa-shopping-bag"></i>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-lg-3 col-6">
-            <div class="small-box bg-warning">
-              <div class="inner">
-                <h3>{{ statistics?.total_customers || 0 }}</h3>
-                <p>Total Customers</p>
-              </div>
-              <div class="icon">
-                <i class="fas fa-users"></i>
-              </div>
-            </div>
-          </div>
-          
-          <div class="col-lg-3 col-6">
-            <div class="small-box bg-danger">
-              <div class="inner">
-                <h3>{{ statistics?.total_products || 0 }}</h3>
-                <p>Total Products</p>
-              </div>
-              <div class="icon">
-                <i class="fas fa-box"></i>
-              </div>
-            </div>
+          <div class="card-body">
+            <canvas ref="salesChart"></canvas>
           </div>
         </div>
-
-        <div class="row">
-          <!-- Sales Chart -->
-          <div class="col-lg-8">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Sales Overview</h3>
-                <div class="card-tools">
-                  <select v-model="selectedDays" class="form-control" @change="loadSalesChart">
-                    <option value="7">Last 7 Days</option>
-                    <option value="30">Last 30 Days</option>
-                    <option value="90">Last 90 Days</option>
-                  </select>
-                </div>
-              </div>
-              <div class="card-body">
-                <canvas ref="salesChart"></canvas>
-              </div>
-            </div>
+      </div>
+      
+      <div class="col-lg-4">
+        <div class="card chart-container">
+          <div class="card-header">
+            <h3 class="card-title">Order Status</h3>
           </div>
-
-          <!-- Order Status Chart -->
-          <div class="col-lg-4">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Order Status</h3>
-              </div>
-              <div class="card-body">
-                <canvas ref="orderStatusChart"></canvas>
-              </div>
-            </div>
+          <div class="card-body">
+            <canvas ref="orderStatusChart"></canvas>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="row">
-          <!-- Recent Orders -->
-          <div class="col-lg-8">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Recent Orders</h3>
-              </div>
-              <div class="card-body table-responsive p-0">
-                <table class="table table-hover text-nowrap">
-                  <thead>
-                    <tr>
-                      <th>Order ID</th>
-                      <th>Customer</th>
-                      <th>Total</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="order in recentOrders" :key="order.id">
-                      <td>#{{ order.id }}</td>
-                      <td>{{ order.customer }}</td>
-                      <td>{{ formatCurrency(order.total) }}</td>
-                      <td>
-                        <span :class="getStatusBadgeClass(order.status)">
-                          {{ order.status }}
-                        </span>
-                      </td>
-                      <td>{{ formatDate(order.date) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+    <!-- Recent Orders -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Recent Orders</h3>
           </div>
-
-          <!-- Top Products -->
-          <div class="col-lg-4">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Top Selling Products</h3>
-              </div>
-              <div class="card-body p-0">
-                <ul class="products-list product-list-in-card pl-2 pr-2">
-                  <li class="item" v-for="product in topProducts" :key="product.id">
-                    <div class="product-img">
-                      <img :src="product.image" alt="Product Image" class="img-size-50">
-                    </div>
-                    <div class="product-info">
-                      <a href="javascript:void(0)" class="product-title">
-                        {{ product.name }}
-                        <span class="badge badge-info float-right">
-                          {{ formatCurrency(product.total_sales) }}
-                        </span>
-                      </a>
-                      <span class="product-description">
-                        {{ product.total_quantity }} units sold
-                      </span>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
+          <div class="card-body table-responsive p-0">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Products</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="order in recentOrders" :key="order.id">
+                  <td>#{{ order.id }}</td>
+                  <td>{{ order.customer }}</td>
+                  <td>{{ order.products }}</td>
+                  <td>${{ order.total }}</td>
+                  <td>
+                    <span :class="getStatusBadgeClass(order.status)">
+                      {{ order.status }}
+                    </span>
+                  </td>
+                  <td>{{ formatDate(order.date) }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -167,61 +118,42 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import Chart from 'chart.js/auto'
 
 export default {
   name: 'Dashboard',
-  
   setup() {
     const store = useStore()
-    const salesChartRef = ref(null)
-    const orderStatusChartRef = ref(null)
-    const selectedDays = ref(7)
-    let salesChart = null
-    let orderStatusChart = null
+    const salesChart = ref(null)
+    const orderStatusChart = ref(null)
 
-    // Computed properties
-    const statistics = computed(() => store.getters.statistics)
-    const salesChartData = computed(() => store.getters.salesChart)
-    const orderStatusChartData = computed(() => store.getters.orderStatusChart)
-    const recentOrders = computed(() => store.getters.recentOrders)
-    const topProducts = computed(() => store.getters.topProducts)
+    const statistics = ref(null)
+    const recentOrders = ref([])
 
-    // Methods
-    const loadDashboardData = async () => {
-      await store.dispatch('fetchDashboardData')
-    }
-
-    const loadSalesChart = async () => {
-      await store.dispatch('fetchSalesChart', selectedDays.value)
-      updateSalesChart()
-    }
-
-    const updateSalesChart = () => {
-      if (!salesChartRef.value) return
-
-      if (salesChart) {
-        salesChart.destroy()
-      }
-
-      const ctx = salesChartRef.value.getContext('2d')
-      salesChart = new Chart(ctx, {
+    const initCharts = () => {
+      // Sales Chart
+      new Chart(salesChart.value, {
         type: 'line',
         data: {
-          labels: salesChartData.value?.labels || [],
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
           datasets: [{
             label: 'Sales',
-            data: salesChartData.value?.data || [],
-            fill: false,
-            borderColor: '#17a2b8',
-            tension: 0.1
+            data: [65, 59, 80, 81, 56, 55],
+            fill: true,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            tension: 0.4
           }]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
           scales: {
             y: {
               beginAtZero: true
@@ -229,169 +161,136 @@ export default {
           }
         }
       })
-    }
 
-    const updateOrderStatusChart = () => {
-      if (!orderStatusChartRef.value) return
-
-      if (orderStatusChart) {
-        orderStatusChart.destroy()
-      }
-
-      const ctx = orderStatusChartRef.value.getContext('2d')
-      orderStatusChart = new Chart(ctx, {
+      // Order Status Chart
+      new Chart(orderStatusChart.value, {
         type: 'doughnut',
         data: {
-          labels: orderStatusChartData.value?.labels || [],
+          labels: ['Completed', 'Pending', 'Cancelled'],
           datasets: [{
-            data: orderStatusChartData.value?.data || [],
-            backgroundColor: [
-              '#28a745',
-              '#ffc107',
-              '#17a2b8',
-              '#dc3545'
-            ]
+            data: [65, 25, 10],
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
           }]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
         }
-      })
-    }
-
-    const formatCurrency = (value) => {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(value)
-    }
-
-    const formatDate = (date) => {
-      return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
       })
     }
 
     const getStatusBadgeClass = (status) => {
       const classes = {
-        pending: 'badge badge-warning',
-        processing: 'badge badge-info',
         completed: 'badge badge-success',
+        pending: 'badge badge-warning',
         cancelled: 'badge badge-danger'
       }
-      return classes[status] || 'badge badge-secondary'
+      return classes[status.toLowerCase()] || 'badge badge-secondary'
     }
 
-    // Lifecycle hooks
+    const formatDate = (date) => {
+      return new Date(date).toLocaleDateString()
+    }
+
     onMounted(async () => {
-      await loadDashboardData()
-      updateSalesChart()
-      updateOrderStatusChart()
+      try {
+        await store.dispatch('fetchDashboardData')
+        statistics.value = store.state.statistics
+        recentOrders.value = store.state.recentOrders
+        initCharts()
+      } catch (error) {
+        console.error('Error loading dashboard data:', error)
+      }
     })
 
     return {
       statistics,
       recentOrders,
-      topProducts,
-      salesChartRef,
-      orderStatusChartRef,
-      selectedDays,
-      formatCurrency,
-      formatDate,
+      salesChart,
+      orderStatusChart,
       getStatusBadgeClass,
-      loadSalesChart
+      formatDate
     }
   }
 }
 </script>
 
 <style scoped>
-.small-box {
-  border-radius: 0.25rem;
-  box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
-  display: block;
-  margin-bottom: 20px;
-  position: relative;
+.dashboard {
+  animation: fadeIn 0.3s ease-out;
 }
 
-.small-box > .inner {
-  padding: 10px;
+.small-box {
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.small-box .inner {
+  position: relative;
+  z-index: 2;
 }
 
 .small-box h3 {
-  font-size: 2.2rem;
-  font-weight: 700;
-  margin: 0 0 10px;
-  padding: 0;
-  white-space: nowrap;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
 }
 
 .small-box p {
   font-size: 1rem;
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary);
 }
 
 .small-box .icon {
-  color: rgba(0,0,0,.15);
-  z-index: 0;
-}
-
-.small-box .icon > i {
-  font-size: 90px;
   position: absolute;
-  right: 15px;
-  top: 15px;
-  transition: transform .3s linear;
+  top: 1rem;
+  right: 1rem;
+  font-size: 3rem;
+  z-index: 1;
 }
 
-.small-box:hover .icon > i {
-  transform: scale(1.1);
-}
-
-.products-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.products-list > .item {
-  border-radius: 0.25rem;
-  padding: 10px;
-  background-color: #fff;
-}
-
-.products-list > .item:after {
-  clear: both;
-  content: "";
-  display: block;
-}
-
-.product-img {
-  float: left;
-  padding-right: 10px;
-  width: 50px;
-}
-
-.product-img img {
-  border-radius: 0.25rem;
-  width: 100%;
-}
-
-.product-info {
-  margin-left: 60px;
-}
-
-.product-title {
-  color: #444;
-  display: block;
+.card-title {
+  font-size: 1.25rem;
   font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
 }
 
-.product-description {
-  color: #999;
-  display: block;
-  font-size: 0.875rem;
+.badge {
+  padding: 0.5em 1em;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+}
+
+.badge-success {
+  background: #10b981;
+  color: white;
+}
+
+.badge-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.badge-danger {
+  background: #ef4444;
+  color: white;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

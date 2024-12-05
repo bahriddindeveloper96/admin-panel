@@ -34,9 +34,18 @@ export default {
 <style>
 @import 'admin-lte/dist/css/adminlte.min.css';
 @import '@fortawesome/fontawesome-free/css/all.min.css';
+@import './assets/modern-theme.css';
 
 body {
   margin: 0;
-  font-family: 'Source Sans Pro', sans-serif;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+#app {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 </style>
