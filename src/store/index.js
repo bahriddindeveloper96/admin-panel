@@ -2,6 +2,7 @@ import { createStore } from 'vuex'
 import axios from 'axios'
 import products from './modules/products'
 import categories from './modules/categories'
+import dashboard from './modules/dashboard'
 
 export default createStore({
   state: {
@@ -255,9 +256,9 @@ export default createStore({
     users: state => state.users,
     totalUsers: state => state.totalUsers
   },
-
   modules: {
     products,
-    categories
+    categories,
+    dashboard
   }
 })

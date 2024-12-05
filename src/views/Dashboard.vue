@@ -8,7 +8,7 @@
             <i class="fas fa-shopping-cart"></i>
           </div>
           <div class="stat-content">
-            <h3>{{ statistics?.new_orders || 0 }}</h3>
+            <h3>{{ statistics.new_orders }}</h3>
             <p>{{ $t('dashboard.new_orders') }}</p>
           </div>
           <div class="stat-chart">
@@ -23,7 +23,7 @@
             <i class="fas fa-box"></i>
           </div>
           <div class="stat-content">
-            <h3>{{ statistics?.active_products || 0 }}</h3>
+            <h3>{{ statistics.active_products }}</h3>
             <p>{{ $t('dashboard.products') }}</p>
           </div>
           <div class="stat-chart">
@@ -38,7 +38,7 @@
             <i class="fas fa-users"></i>
           </div>
           <div class="stat-content">
-            <h3>{{ statistics?.new_users || 0 }}</h3>
+            <h3>{{ statistics.new_users }}</h3>
             <p>{{ $t('dashboard.new_users') }}</p>
           </div>
           <div class="stat-chart">
@@ -53,7 +53,7 @@
             <i class="fas fa-comments"></i>
           </div>
           <div class="stat-content">
-            <h3>{{ statistics?.pending_reviews || 0 }}</h3>
+            <h3>{{ statistics.pending_reviews }}</h3>
             <p>{{ $t('dashboard.pending_reviews') }}</p>
           </div>
           <div class="stat-chart">
@@ -267,29 +267,10 @@ export default {
     const orderStatusChart = ref(null)
     const selectedPeriod = ref('month')
 
-    const statistics = ref(null)
-    const recentOrders = ref([])
-    
-    const orderStats = ref({
-      completed: 856,
-      pending: 236,
-      cancelled: 98,
-      completedPercentage: 72,
-      pendingPercentage: 20,
-      cancelledPercentage: 8,
-      total: 1190
-    })
-
-    const salesStats = ref({
-      totalSales: 124500,
-      salesChange: 12.5,
-      totalOrders: 1850,
-      ordersChange: 8.2,
-      avgOrderValue: 67.30,
-      avgOrderChange: 4.3,
-      conversionRate: 3.6,
-      conversionChange: -1.2
-    })
+    // API dan keladigan statistika
+    const statistics = computed(() => store.state.dashboard.statistics)
+    const salesStats = computed(() => store.state.dashboard.salesStats)
+    const orderStats = computed(() => store.state.dashboard.orderStats)
 
     const chartData = {
       week: {
@@ -435,9 +416,7 @@ export default {
 
     onMounted(async () => {
       try {
-        await store.dispatch('fetchDashboardData')
-        statistics.value = store.state.statistics
-        recentOrders.value = store.state.recentOrders
+        await store.dispatch('dashboard/fetchDashboardStats')
         initCharts()
       } catch (error) {
         console.error('Error loading dashboard data:', error)
@@ -446,14 +425,13 @@ export default {
 
     return {
       statistics,
-      recentOrders,
-      salesChart,
-      orderStatusChart,
-      selectedPeriod,
       salesStats,
       orderStats,
+      selectedPeriod,
       formatCurrency,
-      updateChartData
+      updateChartData,
+      salesChart,
+      orderStatusChart
     }
   }
 }
