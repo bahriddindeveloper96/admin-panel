@@ -15,26 +15,17 @@ import ProductsList from '../views/products/ProductsList.vue'
 import ProductForm from '../views/products/ProductForm.vue'
 import Reports from '../views/reports/Reports.vue'
 import CategoriesList from '../views/categories/CategoriesList.vue'
+import Settings from '../views/settings/Settings.vue'
 
 const routes = [
   {
-    path: '/auth',
-    component: AuthLayout,
-    children: [
-      {
-        path: 'login',
-        name: 'login',
-        component: Login
-      }
-    ]
-  },
-  {
     path: '/',
+    redirect: '/dashboard',
     component: AdminLayout,
     meta: { requiresAuth: true },
     children: [
       {
-        path: '',
+        path: 'dashboard',
         name: 'dashboard',
         component: Dashboard
       },
@@ -69,49 +60,43 @@ const routes = [
         component: ProductForm
       },
       {
+        path: 'categories',
+        name: 'categories',
+        component: CategoriesList
+      },
+      {
         path: 'reports',
         name: 'reports',
         component: Reports
       },
-      // Products routes
       {
-        path: 'products',
-        name: 'products',
-        component: () => import('@/views/products/ProductsList.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: 'products/create',
-        name: 'products.create',
-        component: () => import('@/views/products/ProductForm.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: 'products/:id/edit',
-        name: 'products.edit',
-        component: () => import('@/views/products/ProductForm.vue'),
-        meta: { requiresAuth: true }
-      },
-      // Categories routes
-      {
-        path: 'categories',
-        name: 'categories',
-        component: () => import('@/views/categories/CategoriesList.vue'),
-        meta: { requiresAuth: true }
-      },
-      // Reports route
-      {
-        path: '/reports',
-        name: 'reports',
-        component: () => import('@/views/reports/Reports.vue'),
-        meta: { requiresAuth: true }
-      },
-      // Settings route
-      {
-        path: '/settings',
+        path: 'settings',
         name: 'settings',
-        component: () => import('@/views/settings/Settings.vue'),
-        meta: { requiresAuth: true }
+        component: Settings
+      }
+    ]
+  },
+  {
+    path: '/auth',
+    component: AuthLayout,
+    children: [
+      {
+        path: 'login',
+        name: 'login',
+        component: Login,
+        meta: { guest: true }
+      },
+      {
+        path: 'logout',
+        name: 'logout',
+        async beforeEnter(to, from, next) {
+          try {
+            await store.dispatch('logout')
+            next('/auth/login')
+          } catch {
+            next('/auth/login')
+          }
+        }
       }
     ]
   }
@@ -124,13 +109,14 @@ const router = createRouter({
 
 // Navigation guard
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = store.getters.isAuthenticated
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const isGuest = to.matched.some(record => record.meta.guest)
+  const isAuthenticated = store.getters.isAuthenticated
 
   if (requiresAuth && !isAuthenticated) {
     next('/auth/login')
-  } else if (to.path === '/auth/login' && isAuthenticated) {
-    next('/')
+  } else if (isGuest && isAuthenticated) {
+    next('/dashboard')
   } else {
     next()
   }

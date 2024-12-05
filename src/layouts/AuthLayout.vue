@@ -10,9 +10,12 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .auth-layout {
   min-height: 100vh;
-  background: #f4f6f9;
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

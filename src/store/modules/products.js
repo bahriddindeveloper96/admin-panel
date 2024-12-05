@@ -25,7 +25,7 @@ const actions = {
   async fetchProducts({ commit }, params = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.get('/api/admin/products', { params })
+      const response = await axios.get('/admin/products', { params })
       commit('SET_PRODUCTS', response.data.data)
       commit('SET_TOTAL_PRODUCTS', response.data.total)
       commit('SET_CURRENT_PAGE', response.data.current_page)
@@ -43,7 +43,7 @@ const actions = {
   async fetchProduct({ commit }, id) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.get(`/api/admin/products/${id}`)
+      const response = await axios.get(`/admin/products/${id}`)
       commit('SET_PRODUCT', response.data)
       return response.data
     } catch (error) {
@@ -58,7 +58,7 @@ const actions = {
   async createProduct({ commit }, productData) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.post('/api/admin/products', productData, {
+      const response = await axios.post('/admin/products', productData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -76,7 +76,7 @@ const actions = {
   async updateProduct({ commit }, { id, productData }) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.post(`/api/admin/products/${id}`, productData, {
+      const response = await axios.post(`/admin/products/${id}`, productData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -94,7 +94,7 @@ const actions = {
   async deleteProduct({ commit }, id) {
     try {
       commit('SET_LOADING', true)
-      await axios.delete(`/api/admin/products/${id}`)
+      await axios.delete(`/admin/products/${id}`)
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to delete product')
       throw error
@@ -107,7 +107,7 @@ const actions = {
   async bulkDeleteProducts({ commit }, ids) {
     try {
       commit('SET_LOADING', true)
-      await axios.post('/api/admin/products/bulk-delete', { ids })
+      await axios.post('/admin/products/bulk-delete', { ids })
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to delete products')
       throw error
@@ -120,7 +120,7 @@ const actions = {
   async exportProducts({ commit }, filters = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.get('/api/admin/products/export', {
+      const response = await axios.get('/admin/products/export', {
         params: filters,
         responseType: 'blob'
       })

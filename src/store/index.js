@@ -92,10 +92,17 @@ export default createStore({
     
     async logout({ commit }) {
       try {
-        await axios.post('/admin/logout')
-        commit('CLEAR_AUTH')
+        // API call to logout
+        await axios.post('/auth/logout')
       } catch (error) {
-        throw error
+        console.error('Logout error:', error)
+      } finally {
+        // Clear auth state regardless of API call success
+        commit('CLEAR_AUTH')
+        // Remove token from localStorage
+        localStorage.removeItem('token')
+        // Clear axios default header
+        delete axios.defaults.headers.common['Authorization']
       }
     },
     
