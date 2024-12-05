@@ -69,17 +69,10 @@
         <div class="card modern-card">
           <div class="card-header">
             <h3 class="card-title text-gradient">{{ $t('dashboard.sales_overview') }}</h3>
-            <div class="card-tools">
-              <select class="form-select period-select" v-model="selectedPeriod" @change="updateChartData">
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
-            </div>
           </div>
           <div class="card-body p-4">
             <!-- Quick Stats -->
-            <div class="row g-4 mb-4">
+            <div class="row g-4">
               <div class="col-md-3">
                 <div class="quick-stat">
                   <div class="stat-label">Total Sales</div>
@@ -131,60 +124,6 @@
                     {{ Math.abs(salesStats.conversionChange) }}%
                   </div>
                 </div>
-              </div>
-            </div>
-            <!-- Chart -->
-            <canvas ref="salesChart" height="300"></canvas>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-lg-4">
-        <div class="card modern-card">
-          <div class="card-header">
-            <h3 class="card-title text-gradient">{{ $t('dashboard.order_status') }}</h3>
-          </div>
-          <div class="card-body p-4">
-            <div class="order-stats mb-4">
-              <div class="status-item">
-                <div class="status-info">
-                  <div class="status-dot completed"></div>
-                  <span class="status-label">Completed</span>
-                </div>
-                <div class="status-value">
-                  <span class="value">{{ orderStats.completed }}</span>
-                  <span class="percentage">({{ orderStats.completedPercentage }}%)</span>
-                </div>
-              </div>
-              <div class="status-item">
-                <div class="status-info">
-                  <div class="status-dot pending"></div>
-                  <span class="status-label">Pending</span>
-                </div>
-                <div class="status-value">
-                  <span class="value">{{ orderStats.pending }}</span>
-                  <span class="percentage">({{ orderStats.pendingPercentage }}%)</span>
-                </div>
-              </div>
-              <div class="status-item">
-                <div class="status-info">
-                  <div class="status-dot cancelled"></div>
-                  <span class="status-label">Cancelled</span>
-                </div>
-                <div class="status-value">
-                  <span class="value">{{ orderStats.cancelled }}</span>
-                  <span class="percentage">({{ orderStats.cancelledPercentage }}%)</span>
-                </div>
-              </div>
-            </div>
-            <canvas ref="orderStatusChart" height="220"></canvas>
-            <div class="total-orders text-center mt-4">
-              <p class="total-label">Total Orders</p>
-              <h3 class="total-value">{{ orderStats.total }}</h3>
-              <div class="progress-bar">
-                <div class="progress completed" :style="{ width: orderStats.completedPercentage + '%' }"></div>
-                <div class="progress pending" :style="{ width: orderStats.pendingPercentage + '%' }"></div>
-                <div class="progress cancelled" :style="{ width: orderStats.cancelledPercentage + '%' }"></div>
               </div>
             </div>
           </div>
@@ -255,37 +194,18 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { computed } from 'vue'
 import { useStore } from 'vuex'
-import Chart from 'chart.js/auto'
 
 export default {
   name: 'Dashboard',
   setup() {
     const store = useStore()
-    const salesChart = ref(null)
-    const orderStatusChart = ref(null)
-    const selectedPeriod = ref('month')
 
     // API dan keladigan statistika
     const statistics = computed(() => store.state.dashboard.statistics)
     const salesStats = computed(() => store.state.dashboard.salesStats)
     const orderStats = computed(() => store.state.dashboard.orderStats)
-
-    const chartData = {
-      week: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        data: [12500, 14200, 11800, 15600, 13200, 16800, 15400]
-      },
-      month: {
-        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-        data: [48500, 52300, 57800, 62400]
-      },
-      year: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        data: [125000, 138000, 142000, 156000, 132000, 168000, 154000, 162000, 178000, 184000, 192000, 205000]
-      }
-    }
 
     const formatCurrency = (value) => {
       return new Intl.NumberFormat('en-US', {
@@ -296,142 +216,11 @@ export default {
       }).format(value)
     }
 
-    const updateChartData = () => {
-      const data = chartData[selectedPeriod.value]
-      if (salesChart.value) {
-        salesChart.value.data.labels = data.labels
-        salesChart.value.data.datasets[0].data = data.data
-        salesChart.value.update()
-      }
-    }
-
-    const initCharts = () => {
-      // Sales Chart
-      salesChart.value = new Chart(salesChart.value, {
-        type: 'line',
-        data: {
-          labels: chartData[selectedPeriod.value].labels,
-          datasets: [{
-            label: 'Sales',
-            data: chartData[selectedPeriod.value].data,
-            fill: true,
-            borderColor: '#2196F3',
-            backgroundColor: 'rgba(33, 150, 243, 0.1)',
-            tension: 0.4,
-            borderWidth: 2,
-            pointRadius: 4,
-            pointBackgroundColor: '#ffffff',
-            pointBorderColor: '#2196F3',
-            pointBorderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              mode: 'index',
-              intersect: false,
-              backgroundColor: '#ffffff',
-              titleColor: '#1e293b',
-              bodyColor: '#64748b',
-              borderColor: '#e2e8f0',
-              borderWidth: 1,
-              padding: 12,
-              displayColors: false,
-              callbacks: {
-                label: (context) => {
-                  return formatCurrency(context.parsed.y)
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: {
-                color: '#f1f5f9'
-              },
-              ticks: {
-                callback: (value) => formatCurrency(value)
-              }
-            },
-            x: {
-              grid: {
-                display: false
-              }
-            }
-          }
-        }
-      })
-
-      // Order Status Chart
-      orderStatusChart.value = new Chart(orderStatusChart.value, {
-        type: 'doughnut',
-        data: {
-          labels: ['Completed', 'Pending', 'Cancelled'],
-          datasets: [{
-            data: [orderStats.value.completed, orderStats.value.pending, orderStats.value.cancelled],
-            backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-            borderWidth: 0,
-            spacing: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              backgroundColor: '#ffffff',
-              titleColor: '#1e293b',
-              bodyColor: '#64748b',
-              borderColor: '#e2e8f0',
-              borderWidth: 1,
-              padding: 12,
-              displayColors: true,
-              callbacks: {
-                label: (context) => {
-                  const label = context.label || '';
-                  const value = context.formattedValue;
-                  const percentage = [
-                    orderStats.value.completedPercentage,
-                    orderStats.value.pendingPercentage,
-                    orderStats.value.cancelledPercentage
-                  ][context.dataIndex];
-                  return `${label}: ${value} (${percentage}%)`;
-                }
-              }
-            }
-          },
-          cutout: '75%'
-        }
-      })
-    }
-
-    onMounted(async () => {
-      try {
-        await store.dispatch('dashboard/fetchDashboardStats')
-        initCharts()
-      } catch (error) {
-        console.error('Error loading dashboard data:', error)
-      }
-    })
-
     return {
       statistics,
       salesStats,
       orderStats,
-      selectedPeriod,
-      formatCurrency,
-      updateChartData,
-      salesChart,
-      orderStatusChart
+      formatCurrency
     }
   }
 }
