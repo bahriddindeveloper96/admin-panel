@@ -4,12 +4,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0">Categories</h1>
+            <h1 class="m-0">{{ $t('categories.title') }}</h1>
           </div>
           <div class="col-sm-6">
             <div class="float-sm-right">
               <router-link to="/categories/create" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Category
+                <i class="fas fa-plus"></i> {{ $t('categories.add_category') }}
               </router-link>
             </div>
           </div>
@@ -29,7 +29,7 @@
                   @click="deleteSelected"
                 >
                   <i class="fas fa-trash"></i>
-                  <span>Delete Selected</span>
+                  <span>{{ $t('common.delete_selected') }}</span>
                 </button>
                 <button 
                   class="btn btn-success d-flex align-items-center gap-2" 
@@ -37,7 +37,7 @@
                   @click="exportCategories"
                 >
                   <i class="fas fa-file-export"></i>
-                  <span>Export</span>
+                  <span>{{ $t('common.export') }}</span>
                 </button>
               </div>
               <div class="search-box">
@@ -45,7 +45,7 @@
                 <input
                   type="text"
                   class="form-control search-input"
-                  placeholder="Search categories..."
+                  :placeholder="$t('categories.search_placeholder')"
                   v-model="search"
                   @input="handleSearch"
                   :disabled="loading"
@@ -67,12 +67,12 @@
                       :disabled="loading"
                     >
                   </th>
-                  <th>Image</th>
-                  <th>Name</th>
-                  <th>Parent Category</th>
-                  <th>Products</th>
-                  <th>Status</th>
-                  <th class="text-center">Actions</th>
+                  <th>{{ $t('categories.table.image') }}</th>
+                  <th>{{ $t('categories.table.name') }}</th>
+                  <th>{{ $t('categories.table.parent') }}</th>
+                  <th>{{ $t('categories.table.products') }}</th>
+                  <th>{{ $t('categories.table.status') }}</th>
+                  <th class="text-center">{{ $t('common.actions') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,7 +81,7 @@
                     <td colspan="7">
                       <div class="d-flex justify-content-center align-items-center py-5">
                         <div class="spinner-border" role="status">
-                          <span class="sr-only">Loading...</span>
+                          <span class="sr-only">{{ $t('common.loading') }}</span>
                         </div>
                       </div>
                     </td>
@@ -92,7 +92,7 @@
                     <td colspan="7">
                       <div class="empty-state">
                         <i class="fas fa-folder-open"></i>
-                        <p class="mb-0">No categories found</p>
+                        <p class="mb-0">{{ $t('categories.no_categories') }}</p>
                       </div>
                     </td>
                   </tr>
@@ -120,17 +120,17 @@
                     </td>
                     <td>
                       <div class="fw-medium">{{ category.name }}</div>
-                      <small class="text-muted">ID: {{ category.id }}</small>
+                      <small class="text-muted">{{ $t('common.id') }}: {{ category.id }}</small>
                     </td>
                     <td>
-                      <span class="parent-badge">{{ category.parent?.name || 'Root Category' }}</span>
+                      <span class="parent-badge">{{ category.parent?.name || $t('categories.root_category') }}</span>
                     </td>
                     <td>
                       <span class="products-badge">{{ category.products_count || 0 }}</span>
                     </td>
                     <td>
                       <span :class="getStatusBadgeClass(category.status)">
-                        {{ category.status }}
+                        {{ category.status ? $t('common.status.active') : $t('common.status.inactive') }}
                       </span>
                     </td>
                     <td>
@@ -138,7 +138,7 @@
                         <router-link
                           :to="`/categories/${category.id}/edit`"
                           class="btn btn-sm btn-info"
-                          title="Edit"
+                          :title="$t('common.edit')"
                         >
                           <i class="fas fa-edit"></i>
                         </router-link>
@@ -146,7 +146,7 @@
                           class="btn btn-sm btn-danger"
                           @click="confirmDelete(category)"
                           :disabled="loading"
-                          title="Delete"
+                          :title="$t('common.delete')"
                         >
                           <i class="fas fa-trash"></i>
                         </button>

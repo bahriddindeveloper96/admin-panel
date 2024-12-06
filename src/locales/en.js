@@ -23,17 +23,53 @@ export default {
     add: 'Add',
     edit: 'Edit',
     delete: 'Delete',
+    delete_selected: 'Delete Selected',
+    export: 'Export',
     save: 'Save',
     cancel: 'Cancel',
     confirm: 'Confirm',
     actions: 'Actions',
-    status: 'Status',
+    status: {
+      active: 'Active',
+      inactive: 'Inactive'
+    },
     date: 'Date',
     customer: 'Customer',
     total: 'Total',
     more_info: 'More info',
     order_id: 'Order ID',
-    products: 'Products'
+    products: 'Products',
+    loading: 'Loading...',
+    id: 'ID'
+  },
+  products: {
+    title: 'Products',
+    add_product: 'Add Product',
+    search_placeholder: 'Search products...',
+    no_products: 'No products found',
+    uncategorized: 'Uncategorized',
+    table: {
+      image: 'Image',
+      name: 'Name',
+      category: 'Category',
+      price: 'Price',
+      stock: 'Stock',
+      status: 'Status'
+    }
+  },
+  categories: {
+    title: 'Categories',
+    add_category: 'Add Category',
+    search_placeholder: 'Search categories...',
+    no_categories: 'No categories found',
+    root_category: 'Root Category',
+    table: {
+      image: 'Image',
+      name: 'Name',
+      parent: 'Parent Category',
+      products: 'Products',
+      status: 'Status'
+    }
   },
   dashboard: {
     new_orders: 'New Orders',

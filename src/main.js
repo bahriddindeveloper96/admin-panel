@@ -4,6 +4,7 @@ import router from './router'
 import store from './store'
 import i18n from './i18n'
 import axios from 'axios'
+import { watch } from 'vue'
 
 // Bootstrap va AdminLTE
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -22,6 +23,10 @@ axios.interceptors.request.use(config => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  
+  // Add Accept-Language header based on current locale
+  config.headers['Accept-Language'] = i18n.global.locale.value
+  
   return config
 })
 
@@ -43,5 +48,15 @@ const app = createApp(App)
 app.use(router)
 app.use(store)
 app.use(i18n)
+
+// Watch for language changes
+watch(
+  () => i18n.global.locale.value,
+  (newLocale) => {
+    localStorage.setItem('locale', newLocale)
+    // Update axios Accept-Language header when language changes
+    axios.defaults.headers['Accept-Language'] = newLocale
+  }
+)
 
 app.mount('#app')

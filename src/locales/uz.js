@@ -1,6 +1,6 @@
 export default {
   menu: {
-    dashboard: 'Bosh sahifa',
+    dashboard: 'Boshqaruv paneli',
     users: 'Foydalanuvchilar',
     products: 'Mahsulotlar',
     orders: 'Buyurtmalar',
@@ -9,7 +9,7 @@ export default {
     categories: 'Kategoriyalar'
   },
   auth: {
-    login: 'Tizimga kirish',
+    login: 'Kirish',
     logout: 'Chiqish',
     email: 'Email',
     password: 'Parol',
@@ -23,17 +23,39 @@ export default {
     add: 'Qo\'shish',
     edit: 'Tahrirlash',
     delete: 'O\'chirish',
+    delete_selected: 'Tanlanganlarni o\'chirish',
+    export: 'Eksport',
     save: 'Saqlash',
     cancel: 'Bekor qilish',
     confirm: 'Tasdiqlash',
     actions: 'Amallar',
-    status: 'Holat',
+    status: {
+      active: 'Faol',
+      inactive: 'Faol emas'
+    },
     date: 'Sana',
     customer: 'Mijoz',
     total: 'Jami',
     more_info: 'Batafsil',
-    order_id: 'Buyurtma ID',
-    products: 'Mahsulotlar'
+    order_id: 'Buyurtma raqami',
+    products: 'Mahsulotlar',
+    loading: 'Yuklanmoqda...',
+    id: 'ID'
+  },
+  products: {
+    title: 'Mahsulotlar',
+    add_product: 'Mahsulot qo\'shish',
+    search_placeholder: 'Mahsulotlarni qidirish...',
+    no_products: 'Mahsulotlar topilmadi',
+    uncategorized: 'Kategoriyasiz',
+    table: {
+      image: 'Rasm',
+      name: 'Nomi',
+      category: 'Kategoriya',
+      price: 'Narxi',
+      stock: 'Ombor',
+      status: 'Holati'
+    }
   },
   dashboard: {
     new_orders: 'Yangi buyurtmalar',
@@ -41,9 +63,9 @@ export default {
     users: 'Foydalanuvchilar',
     revenue: 'Daromad',
     recent_orders: 'So\'nggi buyurtmalar',
-    sales_chart: 'Savdo statistikasi',
+    sales_chart: 'Sotuvlar grafigi',
     total_orders: 'Jami buyurtmalar',
-    sales_overview: 'Savdo ko\'rsatkichlari',
+    sales_overview: 'Sotuvlar ko\'rsatkichi',
     order_status: 'Buyurtma holati'
   },
   orders: {
@@ -52,6 +74,20 @@ export default {
       processing: 'Jarayonda',
       completed: 'Bajarildi',
       cancelled: 'Bekor qilindi'
+    }
+  },
+  categories: {
+    title: 'Kategoriyalar',
+    add_category: 'Kategoriya qo\'shish',
+    search_placeholder: 'Kategoriyalarni qidirish...',
+    no_categories: 'Kategoriyalar topilmadi',
+    root_category: 'Asosiy kategoriya',
+    table: {
+      image: 'Rasm',
+      name: 'Nomi',
+      parent: 'Asosiy kategoriya',
+      products: 'Mahsulotlar',
+      status: 'Holati'
     }
   },
   messages: {
