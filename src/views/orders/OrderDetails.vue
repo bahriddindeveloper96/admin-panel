@@ -5,16 +5,16 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Order Information</h3>
+            <h3 class="card-title">{{ $t('order_details.order_info.title') }}</h3>
           </div>
           <div class="card-body">
             <table class="table">
               <tr>
-                <th>Order ID:</th>
+                <th>{{ $t('order_details.order_info.order_id') }}:</th>
                 <td>#{{ order.id }}</td>
               </tr>
               <tr>
-                <th>Status:</th>
+                <th>{{ $t('order_details.order_info.status') }}:</th>
                 <td>
                   <span :class="getStatusBadgeClass(order.status)">
                     {{ order.status }}
@@ -23,24 +23,24 @@
                     class="btn btn-sm btn-outline-primary ml-2"
                     @click="showStatusModal"
                   >
-                    Update Status
+                    {{ $t('order_details.order_info.update_status') }}
                   </button>
                 </td>
               </tr>
               <tr>
-                <th>Date:</th>
+                <th>{{ $t('order_details.order_info.date') }}:</th>
                 <td>{{ formatDate(order.created_at) }}</td>
               </tr>
               <tr>
-                <th>Total Amount:</th>
+                <th>{{ $t('order_details.order_info.total_amount') }}:</th>
                 <td>${{ formatNumber(order.total_amount) }}</td>
               </tr>
               <tr v-if="order.tracking_number">
-                <th>Tracking Number:</th>
+                <th>{{ $t('order_details.order_info.tracking_number') }}:</th>
                 <td>{{ order.tracking_number }}</td>
               </tr>
               <tr v-if="order.notes">
-                <th>Notes:</th>
+                <th>{{ $t('order_details.order_info.notes') }}:</th>
                 <td>{{ order.notes }}</td>
               </tr>
             </table>
@@ -52,20 +52,20 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Customer Information</h3>
+            <h3 class="card-title">{{ $t('order_details.customer_info.title') }}</h3>
           </div>
           <div class="card-body">
             <table class="table">
               <tr>
-                <th>Name:</th>
+                <th>{{ $t('order_details.customer_info.name') }}:</th>
                 <td>{{ order.user?.name }}</td>
               </tr>
               <tr>
-                <th>Email:</th>
+                <th>{{ $t('order_details.customer_info.email') }}:</th>
                 <td>{{ order.user?.email }}</td>
               </tr>
               <tr>
-                <th>Phone:</th>
+                <th>{{ $t('order_details.customer_info.phone') }}:</th>
                 <td>{{ order.user?.phone }}</td>
               </tr>
             </table>
@@ -77,17 +77,17 @@
     <!-- Order Items -->
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">Order Items</h3>
+        <h3 class="card-title">{{ $t('order_details.order_items.title') }}</h3>
       </div>
       <div class="card-body table-responsive p-0">
         <table class="table">
           <thead>
             <tr>
-              <th>Product</th>
-              <th>SKU</th>
-              <th>Price</th>
-              <th>Quantity</th>
-              <th>Total</th>
+              <th>{{ $t('order_details.order_items.product') }}</th>
+              <th>{{ $t('order_details.order_items.sku') }}</th>
+              <th>{{ $t('order_details.order_items.price') }}</th>
+              <th>{{ $t('order_details.order_items.quantity') }}</th>
+              <th>{{ $t('order_details.order_items.total') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -110,15 +110,15 @@
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="4" class="text-right"><strong>Subtotal:</strong></td>
+              <td colspan="4" class="text-right"><strong>{{ $t('order_details.order_items.subtotal') }}:</strong></td>
               <td>${{ formatNumber(order.subtotal) }}</td>
             </tr>
             <tr>
-              <td colspan="4" class="text-right"><strong>Shipping:</strong></td>
+              <td colspan="4" class="text-right"><strong>{{ $t('order_details.order_items.shipping') }}:</strong></td>
               <td>${{ formatNumber(order.shipping_cost) }}</td>
             </tr>
             <tr>
-              <td colspan="4" class="text-right"><strong>Total:</strong></td>
+              <td colspan="4" class="text-right"><strong>{{ $t('order_details.order_items.total') }}:</strong></td>
               <td>${{ formatNumber(order.total_amount) }}</td>
             </tr>
           </tfoot>
@@ -131,7 +131,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Update Order Status</h5>
+            <h5 class="modal-title">{{ $t('order_details.modal.title') }}</h5>
             <button type="button" class="close" data-dismiss="modal">
               <span>&times;</span>
             </button>
@@ -139,17 +139,17 @@
           <div class="modal-body">
             <form @submit.prevent="updateStatus">
               <div class="form-group">
-                <label>Status</label>
+                <label>{{ $t('order_details.modal.status') }}</label>
                 <select class="form-control" v-model="statusForm.status" required>
-                  <option value="pending">Pending</option>
-                  <option value="processing">Processing</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="pending">{{ $t('orders.statuses.pending') }}</option>
+                  <option value="processing">{{ $t('orders.statuses.processing') }}</option>
+                  <option value="shipped">{{ $t('orders.statuses.shipped') }}</option>
+                  <option value="delivered">{{ $t('orders.statuses.delivered') }}</option>
+                  <option value="cancelled">{{ $t('orders.statuses.cancelled') }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Tracking Number</label>
+                <label>{{ $t('order_details.modal.tracking_number') }}</label>
                 <input 
                   type="text" 
                   class="form-control" 
@@ -157,14 +157,14 @@
                 >
               </div>
               <div class="form-group">
-                <label>Notes</label>
+                <label>{{ $t('order_details.modal.notes') }}</label>
                 <textarea 
                   class="form-control" 
                   v-model="statusForm.notes"
                   rows="3"
                 ></textarea>
               </div>
-              <button type="submit" class="btn btn-primary">Update Status</button>
+              <button type="submit" class="btn btn-primary">{{ $t('order_details.modal.update') }}</button>
             </form>
           </div>
         </div>
@@ -176,6 +176,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 
@@ -184,6 +185,7 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
+    const { t } = useI18n()
     const order = ref({})
     const statusModal = ref(null)
     const statusForm = ref({
@@ -214,13 +216,17 @@ export default {
 
     const updateStatus = async () => {
       try {
-        await axios.put(`/api/admin/orders/${order.value.id}`, statusForm.value)
+        await axios.put(`/api/admin/orders/${order.value.id}/status`, statusForm.value)
         $(statusModal.value).modal('hide')
         await fetchOrder()
-        Swal.fire('Success', 'Order status updated successfully', 'success')
+        Swal.fire({
+          icon: 'success',
+          title: t('order_details.messages.update_success'),
+          showConfirmButton: false,
+          timer: 1500
+        })
       } catch (error) {
-        console.error('Error updating order status:', error)
-        Swal.fire('Error', 'Failed to update order status', 'error')
+        console.error('Error updating status:', error)
       }
     }
 

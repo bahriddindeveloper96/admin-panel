@@ -10,7 +10,7 @@
                 type="text"
                 class="form-control"
                 v-model="filters.search"
-                placeholder="Search orders..."
+                :placeholder="$t('orders.filters.search')"
                 @input="handleSearch"
               >
             </div>
@@ -18,12 +18,12 @@
           <div class="col-md-2">
             <div class="form-group">
               <select class="form-control" v-model="filters.status" @change="fetchOrders">
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="">{{ $t('orders.filters.all_status') }}</option>
+                <option value="pending">{{ $t('orders.status.pending') }}</option>
+                <option value="processing">{{ $t('orders.status.processing') }}</option>
+                <option value="shipped">{{ $t('orders.status.shipped') }}</option>
+                <option value="delivered">{{ $t('orders.status.delivered') }}</option>
+                <option value="cancelled">{{ $t('orders.status.cancelled') }}</option>
               </select>
             </div>
           </div>
@@ -62,13 +62,13 @@
         <table class="table table-hover">
           <thead>
             <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Status</th>
-              <th>Total Amount</th>
-              <th>Items</th>
-              <th>Date</th>
-              <th>Actions</th>
+              <th>{{ $t('orders.table.order_id') }}</th>
+              <th>{{ $t('orders.table.customer') }}</th>
+              <th>{{ $t('orders.table.status') }}</th>
+              <th>{{ $t('orders.table.total_amount') }}</th>
+              <th>{{ $t('orders.table.items') }}</th>
+              <th>{{ $t('orders.table.date') }}</th>
+              <th>{{ $t('orders.table.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -77,11 +77,11 @@
               <td>{{ order.user?.name }}</td>
               <td>
                 <span :class="getStatusBadgeClass(order.status)">
-                  {{ order.status }}
+                  {{ $t(`orders.status.${order.status}`) }}
                 </span>
               </td>
               <td>${{ formatNumber(order.total_amount) }}</td>
-              <td>{{ order.items?.length || 0 }} items</td>
+              <td>{{ order.items?.length || 0 }} {{ $t('orders.table.items_count') }}</td>
               <td>{{ formatDate(order.created_at) }}</td>
               <td>
                 <button 
@@ -116,7 +116,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Update Order Status</h5>
+            <h5 class="modal-title">{{ $t('orders.modal.update_status') }}</h5>
             <button type="button" class="close" data-dismiss="modal">
               <span>&times;</span>
             </button>
@@ -124,17 +124,17 @@
           <div class="modal-body">
             <form @submit.prevent="updateOrderStatus">
               <div class="form-group">
-                <label>Status</label>
+                <label>{{ $t('orders.modal.status') }}</label>
                 <select class="form-control" v-model="statusForm.status" required>
-                  <option value="pending">Pending</option>
-                  <option value="processing">Processing</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="pending">{{ $t('orders.status.pending') }}</option>
+                  <option value="processing">{{ $t('orders.status.processing') }}</option>
+                  <option value="shipped">{{ $t('orders.status.shipped') }}</option>
+                  <option value="delivered">{{ $t('orders.status.delivered') }}</option>
+                  <option value="cancelled">{{ $t('orders.status.cancelled') }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Tracking Number</label>
+                <label>{{ $t('orders.modal.tracking_number') }}</label>
                 <input 
                   type="text" 
                   class="form-control" 
@@ -142,14 +142,14 @@
                 >
               </div>
               <div class="form-group">
-                <label>Notes</label>
+                <label>{{ $t('orders.modal.notes') }}</label>
                 <textarea 
                   class="form-control" 
                   v-model="statusForm.notes"
                   rows="3"
                 ></textarea>
               </div>
-              <button type="submit" class="btn btn-primary">Update Status</button>
+              <button type="submit" class="btn btn-primary">{{ $t('orders.modal.update') }}</button>
             </form>
           </div>
         </div>
@@ -164,6 +164,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 import Pagination from '../../components/Pagination.vue'
+import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'OrdersList',
@@ -189,6 +190,7 @@ export default {
     })
     const selectedOrderId = ref(null)
     const orderStatusModal = ref(null)
+    const { t } = useI18n()
 
     const fetchOrders = async () => {
       try {
@@ -236,35 +238,49 @@ export default {
 
     const updateOrderStatus = async () => {
       try {
-        await axios.put(`/api/admin/orders/${selectedOrderId.value}`, statusForm.value)
+        await axios.put(`/api/admin/orders/${selectedOrderId.value}/status`, statusForm.value)
+        await fetchOrders()
         $(orderStatusModal.value).modal('hide')
-        fetchOrders()
-        Swal.fire('Success', 'Order status updated successfully', 'success')
+        Swal.fire({
+          icon: 'success',
+          title: t('orders.messages.update_success'),
+          showConfirmButton: false,
+          timer: 1500
+        })
       } catch (error) {
-        console.error('Error updating order status:', error)
-        Swal.fire('Error', 'Failed to update order status', 'error')
+        Swal.fire({
+          icon: 'error',
+          title: t('messages.error_occurred'),
+          text: error.message
+        })
       }
     }
 
     const deleteOrder = async (orderId) => {
       const result = await Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
+        title: t('orders.messages.confirm_delete'),
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
+        confirmButtonText: t('common.yes'),
+        cancelButtonText: t('common.no')
       })
 
       if (result.isConfirmed) {
         try {
           await axios.delete(`/api/admin/orders/${orderId}`)
-          fetchOrders()
-          Swal.fire('Deleted!', 'Order has been deleted.', 'success')
+          await fetchOrders()
+          Swal.fire({
+            icon: 'success',
+            title: t('orders.messages.delete_success'),
+            showConfirmButton: false,
+            timer: 1500
+          })
         } catch (error) {
-          console.error('Error deleting order:', error)
-          Swal.fire('Error', 'Failed to delete order', 'error')
+          Swal.fire({
+            icon: 'error',
+            title: t('messages.error_occurred'),
+            text: error.message
+          })
         }
       }
     }

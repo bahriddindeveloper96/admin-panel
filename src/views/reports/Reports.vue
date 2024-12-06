@@ -5,7 +5,7 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0">Reports</h1>
+            <h1 class="m-0">{{ $t('reports.title') }}</h1>
           </div>
         </div>
       </div>
@@ -20,15 +20,15 @@
             <div class="row">
               <div class="col-md-4">
                 <div class="form-group">
-                  <label>Date Range</label>
+                  <label>{{ $t('reports.date_range.label') }}</label>
                   <select class="form-control" v-model="dateRange" @change="updateReports">
-                    <option value="today">Today</option>
-                    <option value="yesterday">Yesterday</option>
-                    <option value="last7days">Last 7 Days</option>
-                    <option value="last30days">Last 30 Days</option>
-                    <option value="thisMonth">This Month</option>
-                    <option value="lastMonth">Last Month</option>
-                    <option value="custom">Custom Range</option>
+                    <option value="today">{{ $t('reports.date_range.today') }}</option>
+                    <option value="yesterday">{{ $t('reports.date_range.yesterday') }}</option>
+                    <option value="last7days">{{ $t('reports.date_range.last7days') }}</option>
+                    <option value="last30days">{{ $t('reports.date_range.last30days') }}</option>
+                    <option value="thisMonth">{{ $t('reports.date_range.thisMonth') }}</option>
+                    <option value="lastMonth">{{ $t('reports.date_range.lastMonth') }}</option>
+                    <option value="custom">{{ $t('reports.date_range.custom') }}</option>
                   </select>
                 </div>
               </div>
@@ -36,7 +36,7 @@
                 <div class="row">
                   <div class="col-md-5">
                     <div class="form-group">
-                      <label>Start Date</label>
+                      <label>{{ $t('reports.date_range.start_date') }}</label>
                       <input 
                         type="date" 
                         class="form-control" 
@@ -47,7 +47,7 @@
                   </div>
                   <div class="col-md-5">
                     <div class="form-group">
-                      <label>End Date</label>
+                      <label>{{ $t('reports.date_range.end_date') }}</label>
                       <input 
                         type="date" 
                         class="form-control" 
@@ -68,7 +68,7 @@
             <div class="small-box bg-info">
               <div class="inner">
                 <h3>${{ formatNumber(summary.totalSales) }}</h3>
-                <p>Total Sales</p>
+                <p>{{ $t('reports.summary.total_sales') }}</p>
               </div>
               <div class="icon">
                 <i class="fas fa-shopping-cart"></i>
@@ -79,7 +79,7 @@
             <div class="small-box bg-success">
               <div class="inner">
                 <h3>{{ summary.totalOrders }}</h3>
-                <p>Total Orders</p>
+                <p>{{ $t('reports.summary.total_orders') }}</p>
               </div>
               <div class="icon">
                 <i class="fas fa-shopping-bag"></i>
@@ -90,7 +90,7 @@
             <div class="small-box bg-warning">
               <div class="inner">
                 <h3>${{ formatNumber(summary.averageOrderValue) }}</h3>
-                <p>Average Order Value</p>
+                <p>{{ $t('reports.summary.average_order') }}</p>
               </div>
               <div class="icon">
                 <i class="fas fa-chart-line"></i>
@@ -101,7 +101,7 @@
             <div class="small-box bg-danger">
               <div class="inner">
                 <h3>{{ summary.totalProducts }}</h3>
-                <p>Products Sold</p>
+                <p>{{ $t('reports.summary.products_sold') }}</p>
               </div>
               <div class="icon">
                 <i class="fas fa-box"></i>
@@ -115,7 +115,7 @@
           <div class="col-md-8">
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">Sales Overview</h3>
+                <h3 class="card-title">{{ $t('reports.charts.sales_overview') }}</h3>
               </div>
               <div class="card-body">
                 <canvas ref="salesChart"></canvas>
@@ -127,7 +127,7 @@
           <div class="col-md-4">
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">Top Products</h3>
+                <h3 class="card-title">{{ $t('reports.charts.top_products') }}</h3>
               </div>
               <div class="card-body p-0">
                 <ul class="products-list product-list-in-card pl-2 pr-2">
@@ -143,11 +143,11 @@
                       <a href="javascript:void(0)" class="product-title">
                         {{ product.name }}
                         <span class="badge badge-info float-right">
-                          {{ product.total_sales }} sold
+                          {{ product.total_sales }} {{ $t('reports.products.sold') }}
                         </span>
                       </a>
                       <span class="product-description">
-                        Revenue: ${{ formatNumber(product.revenue) }}
+                        {{ $t('reports.products.revenue') }}: ${{ formatNumber(product.revenue) }}
                       </span>
                     </div>
                   </li>
@@ -162,7 +162,7 @@
           <div class="col-md-6">
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">Sales by Category</h3>
+                <h3 class="card-title">{{ $t('reports.charts.sales_by_category') }}</h3>
               </div>
               <div class="card-body">
                 <canvas ref="categoryChart"></canvas>
@@ -174,7 +174,7 @@
           <div class="col-md-6">
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">Order Status Distribution</h3>
+                <h3 class="card-title">{{ $t('reports.charts.order_status') }}</h3>
               </div>
               <div class="card-body">
                 <canvas ref="statusChart"></canvas>
@@ -186,14 +186,14 @@
         <!-- Recent Orders -->
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Recent Orders</h3>
+            <h3 class="card-title">{{ $t('reports.orders.recent') }}</h3>
             <div class="card-tools">
               <button 
                 type="button" 
                 class="btn btn-tool" 
                 @click="exportOrders"
               >
-                <i class="fas fa-download"></i> Export
+                <i class="fas fa-download"></i> {{ $t('reports.orders.export') }}
               </button>
             </div>
           </div>
@@ -201,12 +201,12 @@
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Products</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Date</th>
+                  <th>{{ $t('reports.orders.table.order_id') }}</th>
+                  <th>{{ $t('reports.orders.table.customer') }}</th>
+                  <th>{{ $t('reports.orders.table.products') }}</th>
+                  <th>{{ $t('reports.orders.table.total') }}</th>
+                  <th>{{ $t('reports.orders.table.status') }}</th>
+                  <th>{{ $t('reports.orders.table.date') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -216,8 +216,8 @@
                   <td>{{ order.products_count }} items</td>
                   <td>${{ formatNumber(order.total) }}</td>
                   <td>
-                    <span :class="getStatusBadgeClass(order.status)">
-                      {{ order.status }}
+                    <span :class="getStatusClass(order.status)">
+                      {{ $t(`reports.orders.status.${order.status}`) }}
                     </span>
                   </td>
                   <td>{{ formatDate(order.created_at) }}</td>
@@ -236,10 +236,12 @@ import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import Chart from 'chart.js/auto'
 import Swal from 'sweetalert2'
+import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'Reports',
   setup() {
+    const { t } = useI18n()
     const dateRange = ref('last7days')
     const customRange = ref({
       start: '',
@@ -409,7 +411,7 @@ export default {
     }
 
     // Get status badge class
-    const getStatusBadgeClass = (status) => {
+    const getStatusClass = (status) => {
       const classes = {
         pending: 'badge badge-warning',
         processing: 'badge badge-info',
@@ -441,7 +443,7 @@ export default {
       exportOrders,
       formatNumber,
       formatDate,
-      getStatusBadgeClass
+      getStatusClass
     }
   }
 }

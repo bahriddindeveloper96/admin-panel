@@ -3,10 +3,10 @@
     <!-- Filters -->
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">Users</h3>
+        <h3 class="card-title">{{ $t('users.title') }}</h3>
         <div class="card-tools">
           <button class="btn btn-primary btn-sm" @click="showCreateModal">
-            <i class="fas fa-plus"></i> Add User
+            <i class="fas fa-plus"></i> {{ $t('users.add_user') }}
           </button>
         </div>
       </div>
@@ -17,7 +17,7 @@
               <input
                 type="text"
                 class="form-control"
-                placeholder="Search users..."
+                :placeholder="$t('users.search_placeholder')"
                 v-model="filters.search"
                 @input="handleSearch"
               >
@@ -30,21 +30,21 @@
           </div>
           <div class="col-md-3">
             <select class="form-control" v-model="filters.role" @change="handleSearch">
-              <option value="">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="user">User</option>
+              <option value="">{{ $t('users.all_roles') }}</option>
+              <option value="admin">{{ $t('users.roles.admin') }}</option>
+              <option value="user">{{ $t('users.roles.user') }}</option>
             </select>
           </div>
           <div class="col-md-6">
             <div class="float-right">
               <select class="form-control" v-model="selectedAction" style="width: 150px; display: inline-block; margin-right: 10px;">
-                <option value="">Bulk Actions</option>
-                <option value="delete">Delete</option>
-                <option value="activate">Activate</option>
-                <option value="deactivate">Deactivate</option>
+                <option value="">{{ $t('users.bulk_actions') }}</option>
+                <option value="delete">{{ $t('users.actions.delete') }}</option>
+                <option value="activate">{{ $t('users.actions.activate') }}</option>
+                <option value="deactivate">{{ $t('users.actions.deactivate') }}</option>
               </select>
               <button class="btn btn-secondary" @click="handleBulkAction" :disabled="!selectedAction || selectedUsers.length === 0">
-                Apply
+                {{ $t('users.apply') }}
               </button>
             </div>
           </div>
@@ -58,10 +58,10 @@
                 <th width="40">
                   <input type="checkbox" @change="toggleSelectAll" :checked="selectAll">
                 </th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Role</th>
-                <th>Status</th>
+                <th>{{ $t('users.modal.email') }}</th>
+                <th>{{ $t('users.modal.phone') }}</th>
+                <th>{{ $t('users.modal.role') }}</th>
+                <th>{{ $t('users.modal.status') }}</th>
                 <th>Created</th>
                 <th width="150">Actions</th>
               </tr>
@@ -80,12 +80,12 @@
                 <td>{{ user.phone || '-' }}</td>
                 <td>
                   <span :class="['badge', user.role === 'admin' ? 'badge-danger' : 'badge-info']">
-                    {{ user.role }}
+                    {{ $t(`users.roles.${user.role}`) }}
                   </span>
                 </td>
                 <td>
                   <span :class="['badge', user.status === 'active' ? 'badge-success' : 'badge-warning']">
-                    {{ user.status }}
+                    {{ $t(`users.status.${user.status}`) }}
                   </span>
                 </td>
                 <td>{{ new Date(user.created_at).toLocaleDateString() }}</td>
@@ -107,7 +107,7 @@
                 </td>
               </tr>
               <tr v-if="users.length === 0">
-                <td colspan="7" class="text-center">No users found</td>
+                <td colspan="7" class="text-center">{{ $t('users.no_users') }}</td>
               </tr>
             </tbody>
           </table>
@@ -128,7 +128,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">{{ isEditing ? 'Edit User' : 'Create User' }}</h5>
+            <h5 class="modal-title">{{ isEditing ? $t('users.modal.edit_title') : $t('users.modal.create_title') }}</h5>
             <button type="button" class="close" data-dismiss="modal">
               <span>&times;</span>
             </button>
@@ -136,37 +136,37 @@
           <div class="modal-body">
             <form @submit.prevent="handleSubmit">
               <div class="form-group">
-                <label>Email</label>
+                <label>{{ $t('users.modal.email') }}</label>
                 <input type="email" class="form-control" v-model="userForm.email" required>
               </div>
               <div class="form-group">
-                <label>Phone</label>
+                <label>{{ $t('users.modal.phone') }}</label>
                 <input type="text" class="form-control" v-model="userForm.phone">
               </div>
               <div class="form-group">
-                <label>Password {{ isEditing ? '(leave empty to keep current)' : '' }}</label>
+                <label>{{ $t('users.modal.password') }} {{ isEditing ? $t('users.modal.password_help') : '' }}</label>
                 <input type="password" class="form-control" v-model="userForm.password" :required="!isEditing">
               </div>
               <div class="form-group">
-                <label>Role</label>
+                <label>{{ $t('users.modal.role') }}</label>
                 <select class="form-control" v-model="userForm.role" required>
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
+                  <option value="user">{{ $t('users.roles.user') }}</option>
+                  <option value="admin">{{ $t('users.roles.admin') }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Status</label>
+                <label>{{ $t('users.modal.status') }}</label>
                 <select class="form-control" v-model="userForm.status" required>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="active">{{ $t('users.status.active') }}</option>
+                  <option value="inactive">{{ $t('users.status.inactive') }}</option>
                 </select>
               </div>
               <div class="text-right">
                 <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">
-                  Cancel
+                  {{ $t('users.modal.cancel') }}
                 </button>
                 <button type="submit" class="btn btn-primary">
-                  {{ isEditing ? 'Update' : 'Create' }}
+                  {{ isEditing ? $t('users.modal.update') : $t('users.modal.create') }}
                 </button>
               </div>
             </form>
@@ -180,6 +180,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { useI18n } from 'vue-i18n'
 import Swal from 'sweetalert2'
 import Pagination from '../../components/Pagination.vue'
 
@@ -189,6 +190,7 @@ export default {
     Pagination
   },
   setup() {
+    const { t } = useI18n()
     const store = useStore()
     const users = ref([])
     const total = ref(0)
@@ -299,63 +301,81 @@ export default {
     }
 
     const handleDelete = async (userId) => {
-      try {
-        const result = await Swal.fire({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, delete it!'
-        })
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: t('users.messages.confirm_delete'),
+        showCancelButton: true,
+        confirmButtonText: t('users.actions.delete'),
+        cancelButtonText: t('users.modal.cancel')
+      })
 
-        if (result.isConfirmed) {
+      if (result.isConfirmed) {
+        try {
           await store.dispatch('deleteUser', userId)
+          Swal.fire({
+            icon: 'success',
+            title: t('users.messages.user_deleted'),
+            showConfirmButton: false,
+            timer: 1500
+          })
           fetchUsers()
-          Swal.fire('Deleted!', 'User has been deleted.', 'success')
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: t('messages.error_occurred'),
+            text: error.message
+          })
         }
-      } catch (error) {
-        console.error('Error deleting user:', error)
-        Swal.fire('Error', 'Failed to delete user', 'error')
       }
     }
 
     const handleBulkAction = async () => {
-      if (!selectedAction.value || selectedUsers.value.length === 0) return
+      let confirmMessage = ''
+      switch (selectedAction.value) {
+        case 'delete':
+          confirmMessage = t('users.messages.confirm_bulk_delete')
+          break
+        case 'activate':
+          confirmMessage = t('users.messages.confirm_bulk_activate')
+          break
+        case 'deactivate':
+          confirmMessage = t('users.messages.confirm_bulk_deactivate')
+          break
+      }
 
-      try {
-        switch (selectedAction.value) {
-          case 'delete':
-            const result = await Swal.fire({
-              title: 'Are you sure?',
-              text: `You are about to delete ${selectedUsers.value.length} users!`,
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonColor: '#3085d6',
-              cancelButtonColor: '#d33',
-              confirmButtonText: 'Yes, delete them!'
-            })
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: confirmMessage,
+        showCancelButton: true,
+        confirmButtonText: t('users.apply'),
+        cancelButtonText: t('users.modal.cancel')
+      })
 
-            if (result.isConfirmed) {
-              await Promise.all(selectedUsers.value.map(id => store.dispatch('deleteUser', id)))
-              fetchUsers()
-              selectedUsers.value = []
-              Swal.fire('Deleted!', 'Users have been deleted.', 'success')
-            }
-            break
-
-          case 'activate':
-          case 'deactivate':
-            await Promise.all(selectedUsers.value.map(id => store.dispatch('toggleUserStatus', id)))
-            fetchUsers()
-            selectedUsers.value = []
-            Swal.fire('Success', `Users have been ${selectedAction.value}d.`, 'success')
-            break
+      if (result.isConfirmed) {
+        try {
+          await store.dispatch('bulkAction', {
+            action: selectedAction.value,
+            userIds: selectedUsers.value
+          })
+          
+          selectedUsers.value = []
+          selectedAction.value = ''
+          
+          Swal.fire({
+            icon: 'success',
+            title: t('users.messages.bulk_action_success'),
+            showConfirmButton: false,
+            timer: 1500
+          })
+          
+          fetchUsers()
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: t('messages.error_occurred'),
+            text: error.message
+          })
         }
-      } catch (error) {
-        console.error('Error performing bulk action:', error)
-        Swal.fire('Error', 'Failed to perform bulk action', 'error')
       }
     }
 

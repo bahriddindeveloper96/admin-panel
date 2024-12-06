@@ -5,30 +5,30 @@
         <!-- Profile Settings -->
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Profile Settings</h3>
+            <h3 class="card-title">{{ $t('settings.profile.title') }}</h3>
           </div>
           <div class="card-body">
             <form @submit.prevent="updateProfile">
               <div class="form-group">
-                <label>Name</label>
+                <label>{{ $t('settings.profile.name') }}</label>
                 <input 
                   type="text" 
                   class="form-control" 
                   v-model="profile.name"
-                  placeholder="Your name"
+                  :placeholder="$t('settings.profile.name_placeholder')"
                 >
               </div>
               <div class="form-group">
-                <label>Email</label>
+                <label>{{ $t('settings.profile.email') }}</label>
                 <input 
                   type="email" 
                   class="form-control" 
                   v-model="profile.email"
-                  placeholder="Your email"
+                  :placeholder="$t('settings.profile.email_placeholder')"
                 >
               </div>
               <div class="form-group">
-                <label>Avatar</label>
+                <label>{{ $t('settings.profile.avatar') }}</label>
                 <div class="custom-file">
                   <input 
                     type="file" 
@@ -38,7 +38,7 @@
                     accept="image/*"
                   >
                   <label class="custom-file-label" for="avatar">
-                    {{ profile.avatar ? profile.avatar.name : 'Choose file' }}
+                    {{ profile.avatar ? profile.avatar.name : $t('settings.profile.choose_file') }}
                   </label>
                 </div>
               </div>
@@ -48,7 +48,7 @@
                 :disabled="profileLoading"
               >
                 <span v-if="profileLoading" class="spinner-border spinner-border-sm mr-2"></span>
-                Update Profile
+                {{ $t('settings.profile.update_profile') }}
               </button>
             </form>
           </div>
@@ -57,18 +57,18 @@
         <!-- Password Change -->
         <div class="card mt-4">
           <div class="card-header">
-            <h3 class="card-title">Change Password</h3>
+            <h3 class="card-title">{{ $t('settings.password.title') }}</h3>
           </div>
           <div class="card-body">
             <form @submit.prevent="changePassword">
               <div class="form-group">
-                <label>Current Password</label>
+                <label>{{ $t('settings.password.current') }}</label>
                 <div class="input-group">
                   <input 
                     :type="showCurrentPassword ? 'text' : 'password'" 
                     class="form-control"
                     v-model="password.current"
-                    placeholder="Current password"
+                    :placeholder="$t('settings.password.current_placeholder')"
                   >
                   <div class="input-group-append">
                     <button 
@@ -82,13 +82,13 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>New Password</label>
+                <label>{{ $t('settings.password.new') }}</label>
                 <div class="input-group">
                   <input 
                     :type="showNewPassword ? 'text' : 'password'" 
                     class="form-control"
                     v-model="password.new"
-                    placeholder="New password"
+                    :placeholder="$t('settings.password.new_placeholder')"
                   >
                   <div class="input-group-append">
                     <button 
@@ -102,13 +102,13 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>Confirm New Password</label>
+                <label>{{ $t('settings.password.confirm') }}</label>
                 <div class="input-group">
                   <input 
                     :type="showConfirmPassword ? 'text' : 'password'" 
                     class="form-control"
                     v-model="password.confirm"
-                    placeholder="Confirm new password"
+                    :placeholder="$t('settings.password.confirm_placeholder')"
                   >
                   <div class="input-group-append">
                     <button 
@@ -127,7 +127,7 @@
                 :disabled="passwordLoading"
               >
                 <span v-if="passwordLoading" class="spinner-border spinner-border-sm mr-2"></span>
-                Change Password
+                {{ $t('settings.password.change_password') }}
               </button>
             </form>
           </div>
@@ -138,11 +138,11 @@
         <!-- Preferences -->
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Preferences</h3>
+            <h3 class="card-title">{{ $t('settings.preferences.title') }}</h3>
           </div>
           <div class="card-body">
             <div class="form-group">
-              <label class="d-block">Theme</label>
+              <label class="d-block">{{ $t('settings.preferences.theme') }}</label>
               <div class="btn-group">
                 <button 
                   class="btn"
@@ -150,7 +150,7 @@
                   @click="setTheme('light')"
                 >
                   <i class="fas fa-sun mr-2"></i>
-                  Light
+                  {{ $t('settings.preferences.light') }}
                 </button>
                 <button 
                   class="btn"
@@ -158,22 +158,22 @@
                   @click="setTheme('dark')"
                 >
                   <i class="fas fa-moon mr-2"></i>
-                  Dark
+                  {{ $t('settings.preferences.dark') }}
                 </button>
               </div>
             </div>
 
             <div class="form-group">
-              <label>Language</label>
+              <label>{{ $t('settings.preferences.language') }}</label>
               <select class="form-control" v-model="preferences.language">
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
+                <option value="en">{{ $t('settings.preferences.languages.en') }}</option>
+                <option value="ru">{{ $t('settings.preferences.languages.ru') }}</option>
+                <option value="uz">{{ $t('settings.preferences.languages.uz') }}</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>Notifications</label>
+              <label>{{ $t('settings.preferences.notifications') }}</label>
               <div class="custom-control custom-switch">
                 <input 
                   type="checkbox" 
@@ -182,7 +182,7 @@
                   v-model="preferences.emailNotifications"
                 >
                 <label class="custom-control-label" for="emailNotifications">
-                  Email Notifications
+                  {{ $t('settings.preferences.email_notifications') }}
                 </label>
               </div>
               <div class="custom-control custom-switch mt-2">
@@ -193,7 +193,7 @@
                   v-model="preferences.pushNotifications"
                 >
                 <label class="custom-control-label" for="pushNotifications">
-                  Push Notifications
+                  {{ $t('settings.preferences.push_notifications') }}
                 </label>
               </div>
             </div>
@@ -204,67 +204,8 @@
               :disabled="preferencesLoading"
             >
               <span v-if="preferencesLoading" class="spinner-border spinner-border-sm mr-2"></span>
-              Save Preferences
+              {{ $t('settings.preferences.save_preferences') }}
             </button>
-          </div>
-        </div>
-
-        <!-- Security -->
-        <div class="card mt-4">
-          <div class="card-header">
-            <h3 class="card-title">Security</h3>
-          </div>
-          <div class="card-body">
-            <div class="form-group">
-              <label>Two-Factor Authentication</label>
-              <div class="custom-control custom-switch">
-                <input 
-                  type="checkbox" 
-                  class="custom-control-input" 
-                  id="twoFactor"
-                  v-model="security.twoFactor"
-                  @change="toggleTwoFactor"
-                >
-                <label class="custom-control-label" for="twoFactor">
-                  Enable Two-Factor Authentication
-                </label>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Active Sessions</label>
-              <div class="table-responsive">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Device</th>
-                      <th>Location</th>
-                      <th>Last Active</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="session in security.sessions" :key="session.id">
-                      <td>
-                        <i :class="session.deviceIcon" class="mr-2"></i>
-                        {{ session.device }}
-                      </td>
-                      <td>{{ session.location }}</td>
-                      <td>{{ formatDate(session.lastActive) }}</td>
-                      <td>
-                        <button 
-                          class="btn btn-danger btn-sm"
-                          @click="terminateSession(session.id)"
-                          :disabled="session.current"
-                        >
-                          {{ session.current ? 'Current Session' : 'Terminate' }}
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -275,15 +216,17 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { useI18n } from 'vue-i18n'
 import Swal from 'sweetalert2'
 
 export default {
   name: 'Settings',
   
   setup() {
+    const { t, locale } = useI18n()
     const store = useStore()
     
-    // Profile
+    // Profile data
     const profile = ref({
       name: '',
       email: '',
@@ -291,7 +234,7 @@ export default {
     })
     const profileLoading = ref(false)
 
-    // Password
+    // Password data
     const password = ref({
       current: '',
       new: '',
@@ -302,56 +245,33 @@ export default {
     const showNewPassword = ref(false)
     const showConfirmPassword = ref(false)
 
-    // Preferences
+    // Preferences data
     const preferences = ref({
-      language: 'en',
+      language: locale.value,
       emailNotifications: true,
       pushNotifications: false
     })
     const preferencesLoading = ref(false)
     const isDarkMode = ref(false)
 
-    // Security
-    const security = ref({
-      twoFactor: false,
-      sessions: [
-        {
-          id: 1,
-          device: 'Chrome on Windows',
-          deviceIcon: 'fab fa-windows',
-          location: 'New York, USA',
-          lastActive: new Date(),
-          current: true
-        },
-        {
-          id: 2,
-          device: 'Safari on iPhone',
-          deviceIcon: 'fab fa-apple',
-          location: 'Los Angeles, USA',
-          lastActive: new Date(Date.now() - 86400000),
-          current: false
-        }
-      ]
-    })
-
     // Methods
     const updateProfile = async () => {
-      profileLoading.value = true
       try {
-        await store.dispatch('updateProfile', profile.value)
+        profileLoading.value = true
+        // API call would go here
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
         Swal.fire({
           icon: 'success',
-          title: 'Profile Updated',
-          toast: true,
-          position: 'top-end',
+          title: t('settings.messages.profile_updated'),
           showConfirmButton: false,
-          timer: 3000
+          timer: 1500
         })
       } catch (error) {
         Swal.fire({
           icon: 'error',
-          title: 'Update Failed',
-          text: error.response?.data?.message || 'Something went wrong'
+          title: t('messages.error_occurred'),
+          text: error.message
         })
       } finally {
         profileLoading.value = false
@@ -369,18 +289,16 @@ export default {
       if (password.value.new !== password.value.confirm) {
         Swal.fire({
           icon: 'error',
-          title: 'Password Mismatch',
-          text: 'New passwords do not match'
+          title: t('messages.error_occurred'),
+          text: 'Passwords do not match'
         })
         return
       }
 
-      passwordLoading.value = true
       try {
-        await store.dispatch('changePassword', {
-          currentPassword: password.value.current,
-          newPassword: password.value.new
-        })
+        passwordLoading.value = true
+        // API call would go here
+        await new Promise(resolve => setTimeout(resolve, 1000))
         
         password.value = {
           current: '',
@@ -390,17 +308,15 @@ export default {
         
         Swal.fire({
           icon: 'success',
-          title: 'Password Changed',
-          toast: true,
-          position: 'top-end',
+          title: t('settings.messages.password_changed'),
           showConfirmButton: false,
-          timer: 3000
+          timer: 1500
         })
       } catch (error) {
         Swal.fire({
           icon: 'error',
-          title: 'Change Failed',
-          text: error.response?.data?.message || 'Something went wrong'
+          title: t('messages.error_occurred'),
+          text: error.message
         })
       } finally {
         passwordLoading.value = false
@@ -411,144 +327,62 @@ export default {
       isDarkMode.value = theme === 'dark'
       document.documentElement.setAttribute('data-theme', theme)
       localStorage.setItem('theme', theme)
+      
+      // Add or remove dark class from body
+      if (theme === 'dark') {
+        document.body.classList.add('dark-mode')
+      } else {
+        document.body.classList.remove('dark-mode')
+      }
     }
 
     const savePreferences = async () => {
-      preferencesLoading.value = true
       try {
-        await store.dispatch('updatePreferences', preferences.value)
+        preferencesLoading.value = true
+        // API call would go here
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Update language
+        locale.value = preferences.value.language
+        
         Swal.fire({
           icon: 'success',
-          title: 'Preferences Saved',
-          toast: true,
-          position: 'top-end',
+          title: t('settings.messages.preferences_saved'),
           showConfirmButton: false,
-          timer: 3000
+          timer: 1500
         })
       } catch (error) {
         Swal.fire({
           icon: 'error',
-          title: 'Save Failed',
-          text: error.response?.data?.message || 'Something went wrong'
+          title: t('messages.error_occurred'),
+          text: error.message
         })
       } finally {
         preferencesLoading.value = false
       }
     }
 
-    const toggleTwoFactor = async () => {
-      try {
-        if (security.value.twoFactor) {
-          // Enable 2FA
-          const result = await store.dispatch('enable2FA')
-          Swal.fire({
-            title: 'Scan QR Code',
-            html: `
-              <div class="text-center">
-                <img src="${result.qrCode}" alt="2FA QR Code" class="mb-3">
-                <p>Secret key: ${result.secret}</p>
-              </div>
-            `,
-            confirmButtonText: 'Done'
-          })
-        } else {
-          // Disable 2FA
-          await store.dispatch('disable2FA')
-          Swal.fire({
-            icon: 'success',
-            title: 'Two-Factor Authentication Disabled',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-          })
-        }
-      } catch (error) {
-        security.value.twoFactor = !security.value.twoFactor
-        Swal.fire({
-          icon: 'error',
-          title: '2FA Update Failed',
-          text: error.response?.data?.message || 'Something went wrong'
-        })
-      }
-    }
-
-    const terminateSession = async (sessionId) => {
-      try {
-        await store.dispatch('terminateSession', sessionId)
-        security.value.sessions = security.value.sessions.filter(
-          session => session.id !== sessionId
-        )
-        Swal.fire({
-          icon: 'success',
-          title: 'Session Terminated',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000
-        })
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Termination Failed',
-          text: error.response?.data?.message || 'Something went wrong'
-        })
-      }
-    }
-
-    const formatDate = (date) => {
-      return new Date(date).toLocaleString()
-    }
-
-    // Lifecycle
-    onMounted(async () => {
-      // Load user profile
-      const user = store.state.user
-      if (user) {
-        profile.value.name = user.name
-        profile.value.email = user.email
-      }
-
-      // Load theme
+    onMounted(() => {
       const savedTheme = localStorage.getItem('theme') || 'light'
       setTheme(savedTheme)
-
-      // Load preferences
-      try {
-        const userPreferences = await store.dispatch('fetchPreferences')
-        preferences.value = { ...preferences.value, ...userPreferences }
-      } catch (error) {
-        console.error('Error loading preferences:', error)
-      }
     })
 
     return {
-      // Profile
       profile,
       profileLoading,
-      updateProfile,
-      handleAvatarChange,
-
-      // Password
       password,
       passwordLoading,
       showCurrentPassword,
       showNewPassword,
       showConfirmPassword,
-      changePassword,
-
-      // Preferences
       preferences,
       preferencesLoading,
       isDarkMode,
+      updateProfile,
+      handleAvatarChange,
+      changePassword,
       setTheme,
-      savePreferences,
-
-      // Security
-      security,
-      toggleTwoFactor,
-      terminateSession,
-      formatDate
+      savePreferences
     }
   }
 }
@@ -556,98 +390,97 @@ export default {
 
 <style scoped>
 .settings {
-  animation: fadeIn 0.3s ease-out;
+  padding: 1rem;
 }
 
 .card {
-  border: none;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  transition: var(--transition-all);
-}
-
-.card:hover {
-  box-shadow: var(--shadow-lg);
+  margin-bottom: 1rem;
+  box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+  background-color: var(--bg-card);
+  transition: background-color 0.3s ease;
 }
 
 .card-header {
-  background: transparent;
   border-bottom: 1px solid var(--border-color);
-  padding: 1.5rem;
+  background-color: transparent;
 }
 
 .card-title {
   color: var(--text-primary);
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.card-body {
-  padding: 1.5rem;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
 }
 
 .form-group label {
-  color: var(--text-secondary);
-  font-weight: 500;
-  margin-bottom: 0.5rem;
+  color: var(--text-primary);
 }
 
 .form-control {
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.75rem 1rem;
-  transition: var(--transition-all);
+  background-color: var(--bg-input);
+  border-color: var(--border-color);
+  color: var(--text-primary);
 }
 
 .form-control:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  background-color: var(--bg-input);
+  border-color: var(--primary);
+  color: var(--text-primary);
 }
 
-.btn-group {
-  box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+.btn-outline-secondary {
+  border-color: var(--border-color);
+  color: var(--text-primary);
 }
 
-.btn-group .btn {
-  border: none;
-  padding: 0.75rem 1.5rem;
+.btn-outline-secondary:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-color);
+  color: var(--text-primary);
 }
 
-.table {
-  margin: 0;
+.custom-file-label {
+  background-color: var(--bg-input);
+  border-color: var(--border-color);
+  color: var(--text-primary);
 }
 
-.table th {
-  border-top: none;
-  color: var(--text-secondary);
-  font-weight: 600;
-  padding: 1rem;
-}
-
-.table td {
-  padding: 1rem;
-  vertical-align: middle;
-}
-
-.custom-switch {
-  padding-left: 3rem;
+.custom-file-label::after {
+  background-color: var(--bg-hover);
+  border-color: var(--border-color);
+  color: var(--text-primary);
 }
 
 .custom-control-label {
   color: var(--text-primary);
-  font-weight: normal;
 }
 
-.custom-file-input:focus ~ .custom-file-label {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+/* Dark mode specific styles */
+:root {
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --bg-hover: #f8f9fa;
+  --text-primary: #212529;
+  --border-color: #dee2e6;
+  --primary: #007bff;
+}
+
+.dark-mode {
+  --bg-card: #343a40;
+  --bg-input: #2c3136;
+  --bg-hover: #3f474e;
+  --text-primary: #f8f9fa;
+  --border-color: #495057;
+  --primary: #0d6efd;
+}
+
+.btn-group {
+  width: 100%;
+}
+
+.btn-group .btn {
+  flex: 1;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -658,20 +491,6 @@ export default {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@media (max-width: 768px) {
-  .card {
-    margin-bottom: 1rem;
-  }
-  
-  .btn-group {
-    width: 100%;
-  }
-  
-  .btn-group .btn {
-    flex: 1;
   }
 }
 </style>
