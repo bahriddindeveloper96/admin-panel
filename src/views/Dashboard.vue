@@ -194,13 +194,17 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 
 export default {
   name: 'Dashboard',
   setup() {
     const store = useStore()
+
+    onMounted(() => {
+      store.dispatch('dashboard/fetchDashboardStats')
+    })
 
     // API dan keladigan statistika
     const statistics = computed(() => store.state.dashboard.statistics)

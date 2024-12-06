@@ -13,7 +13,7 @@ import 'admin-lte/dist/js/adminlte.min.js'
 import '@fortawesome/fontawesome-free/css/all.min.css'
 
 // Set axios defaults
-axios.defaults.baseURL = ''
+axios.defaults.baseURL = 'http://localhost:8000'
 axios.defaults.withCredentials = true
 
 // Add request interceptor

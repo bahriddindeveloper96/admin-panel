@@ -38,6 +38,7 @@ export default {
     async fetchDashboardStats({ commit }) {
       try {
         const response = await axios.get('/admin/dashboard/stats')
+        console.log('Dashboard stats response:', response.data) // Debug uchun
         commit('SET_STATISTICS', response.data)
       } catch (error) {
         console.error('Error fetching dashboard stats:', error)

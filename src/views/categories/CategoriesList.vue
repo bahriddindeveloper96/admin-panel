@@ -1,15 +1,15 @@
 <template>
   <div class="content">
-    <div class="content-header">
+    <div class="content">
       <div class="container-fluid">
-        <div class="row align-items-center mb-4">
+        <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0 text-gradient">Categories</h1>
+            <h1 class="m-0">Categories</h1>
           </div>
           <div class="col-sm-6">
             <div class="float-sm-right">
-              <router-link to="/categories/create" class="btn btn-primary btn-modern">
-                <i class="fas fa-plus-circle me-2"></i> Add Category
+              <router-link to="/categories/create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Category
               </router-link>
             </div>
           </div>
@@ -19,130 +19,154 @@
 
     <div class="content">
       <div class="container-fluid">
-        <!-- Search and Filter -->
-        <div class="card search-card mb-4">
-          <div class="card-body">
-            <div class="row g-3">
-              <div class="col-md-4">
-                <div class="search-box">
-                  <i class="fas fa-search search-icon"></i>
-                  <input
-                    v-model="search"
-                    type="text"
-                    class="form-control modern-input"
-                    placeholder="Search categories..."
-                    @input="handleSearch"
-                  >
-                </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex gap-3">
+                <button 
+                  class="btn btn-danger d-flex align-items-center gap-2" 
+                  :disabled="!selectedCategories.length || loading"
+                  @click="deleteSelected"
+                >
+                  <i class="fas fa-trash"></i>
+                  <span>Delete Selected</span>
+                </button>
+                <button 
+                  class="btn btn-success d-flex align-items-center gap-2" 
+                  :disabled="loading"
+                  @click="exportCategories"
+                >
+                  <i class="fas fa-file-export"></i>
+                  <span>Export</span>
+                </button>
               </div>
-              <div class="col-md-3">
-                <div class="select-wrapper">
-                  <select
-                    v-model="filters.status"
-                    class="form-select modern-select"
-                    @change="loadCategories"
-                  >
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="select-wrapper">
-                  <select
-                    v-model="filters.parent"
-                    class="form-select modern-select"
-                    @change="loadCategories"
-                  >
-                    <option value="">All Categories</option>
-                    <option value="root">Root Categories</option>
-                    <option
-                      v-for="category in parentCategories"
-                      :key="category.id"
-                      :value="category.id"
-                    >
-                      {{ category.name }}
-                    </option>
-                  </select>
-                </div>
+              <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input
+                  type="text"
+                  class="form-control search-input"
+                  placeholder="Search categories..."
+                  v-model="search"
+                  @input="handleSearch"
+                  :disabled="loading"
+                >
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Categories Grid -->
-        <div class="categories-grid">
-          <template v-if="loading">
-            <div class="text-center py-5">
-              <div class="spinner">
-                <i class="fas fa-spinner fa-spin fa-2x"></i>
-                <p class="mt-2">Loading categories...</p>
-              </div>
-            </div>
-          </template>
-          <template v-else-if="categories.length === 0">
-            <div class="empty-state">
-              <i class="fas fa-folder-open fa-3x mb-3"></i>
-              <h3>No Categories Found</h3>
-              <p>Start by adding your first category</p>
-            </div>
-          </template>
-          <template v-else>
-            <div class="row g-4">
-              <div v-for="category in categories" :key="category.id" class="col-md-4 col-lg-3">
-                <div class="category-card">
-                  <div class="category-image">
-                    <img
-                      v-if="category.image_url"
-                      :src="category.image_url"
-                      :alt="category.name"
-                      class="img-fluid"
+          <div class="card-body table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="text-center">
+                    <input
+                      type="checkbox"
+                      class="custom-checkbox"
+                      :checked="isAllSelected"
+                      @change="toggleSelectAll"
+                      :disabled="loading"
                     >
-                    <div v-else class="no-image">
-                      <i class="fas fa-image"></i>
-                    </div>
-                  </div>
-                  <div class="category-content">
-                    <h3 class="category-name">{{ category.name }}</h3>
-                    <p class="category-parent">{{ category.parent?.name || 'Root Category' }}</p>
-                    <div class="category-meta">
-                      <span class="products-count">
-                        <i class="fas fa-box me-1"></i>
-                        {{ category.products_count || 0 }} Products
-                      </span>
-                      <span
-                        class="status-badge"
-                        :class="{
-                          'active': category.status === 'active',
-                          'inactive': category.status === 'inactive'
-                        }"
+                  </th>
+                  <th>Image</th>
+                  <th>Name</th>
+                  <th>Parent Category</th>
+                  <th>Products</th>
+                  <th>Status</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-if="loading">
+                  <tr>
+                    <td colspan="7">
+                      <div class="d-flex justify-content-center align-items-center py-5">
+                        <div class="spinner-border" role="status">
+                          <span class="sr-only">Loading...</span>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <template v-else-if="!categories.length">
+                  <tr>
+                    <td colspan="7">
+                      <div class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <p class="mb-0">No categories found</p>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <template v-else>
+                  <tr v-for="category in categories" :key="category.id">
+                    <td class="text-center">
+                      <input
+                        type="checkbox"
+                        class="custom-checkbox"
+                        :value="category.id"
+                        v-model="selectedCategories"
                       >
+                    </td>
+                    <td>
+                      <img
+                        v-if="category.image_url"
+                        :src="category.image_url"
+                        :alt="category.name"
+                        class="category-image"
+                      >
+                      <div v-else class="no-image">
+                        <i class="fas fa-image"></i>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="fw-medium">{{ category.name }}</div>
+                      <small class="text-muted">ID: {{ category.id }}</small>
+                    </td>
+                    <td>
+                      <span class="parent-badge">{{ category.parent?.name || 'Root Category' }}</span>
+                    </td>
+                    <td>
+                      <span class="products-badge">{{ category.products_count || 0 }}</span>
+                    </td>
+                    <td>
+                      <span :class="getStatusBadgeClass(category.status)">
                         {{ category.status }}
                       </span>
-                    </div>
-                    <div class="category-actions">
-                      <router-link
-                        :to="`/categories/${category.id}/edit`"
-                        class="btn btn-icon btn-edit"
-                        title="Edit"
-                      >
-                        <i class="fas fa-edit"></i>
-                      </router-link>
-                      <button
-                        class="btn btn-icon btn-delete"
-                        @click="confirmDelete(category)"
-                        :disabled="loading"
-                        title="Delete"
-                      >
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </template>
+                    </td>
+                    <td>
+                      <div class="d-flex justify-content-center gap-2">
+                        <router-link
+                          :to="`/categories/${category.id}/edit`"
+                          class="btn btn-sm btn-info"
+                          title="Edit"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </router-link>
+                        <button
+                          class="btn btn-sm btn-danger"
+                          @click="confirmDelete(category)"
+                          :disabled="loading"
+                          title="Delete"
+                        >
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card-footer clearfix" v-if="pagination">
+            <pagination
+              :total="pagination.total"
+              :per-page="pagination.per_page"
+              :current-page="pagination.current_page"
+              :links="pagination.links"
+              @page-changed="handlePageChange"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -150,34 +174,51 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import Swal from 'sweetalert2'
 import debounce from 'lodash/debounce'
+import Pagination from '@/components/Pagination.vue'
 
 export default {
   name: 'CategoriesList',
-
+  components: { Pagination },
+  
   setup() {
     const store = useStore()
     const loading = ref(false)
     const categories = ref([])
-    const parentCategories = ref([])
+    const selectedCategories = ref([])
     const search = ref('')
-    const filters = ref({
-      status: '',
-      parent: ''
+    const pagination = ref(null)
+
+    const isAllSelected = computed(() => {
+      return categories.value.length > 0 && selectedCategories.value.length === categories.value.length
     })
 
-    // Methods
+    const getStatusBadgeClass = (status) => {
+      return {
+        'badge': true,
+        'bg-success': status === 'active',
+        'bg-danger': status === 'inactive'
+      }
+    }
+
     const loadCategories = async () => {
       try {
         loading.value = true
-        const response = await store.dispatch('categories/fetchCategories')
-        categories.value = response
-
-        // Extract parent categories for filter
-        parentCategories.value = response.filter(cat => !cat.parent_id)
+        const response = await store.dispatch('categories/fetchCategories', {
+          search: search.value
+        })
+        categories.value = response.data || response
+        if (response.meta) {
+          pagination.value = {
+            total: response.meta.total,
+            per_page: response.meta.per_page,
+            current_page: response.meta.current_page,
+            links: response.meta.links
+          }
+        }
       } catch (error) {
         Swal.fire({
           icon: 'error',
@@ -193,252 +234,205 @@ export default {
       loadCategories()
     }, 300)
 
-    const confirmDelete = (category) => {
-      Swal.fire({
+    const toggleSelectAll = () => {
+      if (isAllSelected.value) {
+        selectedCategories.value = []
+      } else {
+        selectedCategories.value = categories.value.map(cat => cat.id)
+      }
+    }
+
+    const deleteSelected = async () => {
+      if (!selectedCategories.value.length) return
+
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: `Do you want to delete ${selectedCategories.value.length} selected categories?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete them',
+        cancelButtonText: 'Cancel'
+      })
+
+      if (result.isConfirmed) {
+        try {
+          await store.dispatch('categories/deleteCategories', selectedCategories.value)
+          selectedCategories.value = []
+          await loadCategories()
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Categories deleted successfully'
+          })
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to delete categories'
+          })
+        }
+      }
+    }
+
+    const confirmDelete = async (category) => {
+      const result = await Swal.fire({
         title: 'Are you sure?',
         text: `Do you want to delete the category "${category.name}"?`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, delete it!'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          deleteCategory(category.id)
-        }
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel'
       })
-    }
 
-    const deleteCategory = async (id) => {
-      try {
-        loading.value = true
-        await store.dispatch('categories/deleteCategory', id)
-        
-        Swal.fire({
-          icon: 'success',
-          title: 'Success',
-          text: 'Category deleted successfully'
-        })
-
-        loadCategories()
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: error.response?.data?.message || 'Failed to delete category'
-        })
-      } finally {
-        loading.value = false
+      if (result.isConfirmed) {
+        try {
+          await store.dispatch('categories/deleteCategory', category.id)
+          await loadCategories()
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Category deleted successfully'
+          })
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to delete category'
+          })
+        }
       }
     }
 
-    // Lifecycle hooks
+    const exportCategories = () => {
+      // TODO: Implement export functionality
+      Swal.fire({
+        icon: 'info',
+        title: 'Coming Soon',
+        text: 'Export functionality will be available soon'
+      })
+    }
+
+    const handlePageChange = (page) => {
+      // TODO: Implement pagination
+      loadCategories()
+    }
+
     onMounted(() => {
       loadCategories()
     })
 
     return {
-      categories,
-      parentCategories,
       loading,
+      categories,
+      selectedCategories,
       search,
-      filters,
+      pagination,
+      isAllSelected,
+      getStatusBadgeClass,
       handleSearch,
-      confirmDelete
+      toggleSelectAll,
+      deleteSelected,
+      confirmDelete,
+      exportCategories,
+      handlePageChange
     }
   }
 }
 </script>
 
 <style scoped>
-.text-gradient {
-  background: linear-gradient(45deg, #2196F3, #00BCD4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 700;
+.card {
+  box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+  margin-bottom: 1rem;
 }
 
-.btn-modern {
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.btn-modern:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-}
-
-.search-card {
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+.card-header {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0,0,0,.125);
 }
 
 .search-box {
   position: relative;
+  width: 300px;
 }
 
 .search-icon {
   position: absolute;
-  left: 12px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9e9e9e;
+  color: #6c757d;
 }
 
-.modern-input {
-  padding-left: 40px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  transition: all 0.3s ease;
-}
-
-.modern-input:focus {
-  border-color: #2196F3;
-  box-shadow: 0 0 0 3px rgba(33,150,243,0.1);
-}
-
-.modern-select {
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  padding: 0.5rem 1rem;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.modern-select:focus {
-  border-color: #2196F3;
-  box-shadow: 0 0 0 3px rgba(33,150,243,0.1);
-}
-
-.categories-grid {
-  margin-top: 2rem;
-}
-
-.category-card {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-}
-
-.category-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 12px rgba(0,0,0,0.1);
+.search-input {
+  padding-left: 35px;
 }
 
 .category-image {
-  height: 160px;
-  background: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.category-image img {
-  width: 100%;
-  height: 100%;
+  width: 50px;
+  height: 50px;
   object-fit: cover;
+  border-radius: 4px;
 }
 
 .no-image {
-  color: #bdbdbd;
-  font-size: 2rem;
-}
-
-.category-content {
-  padding: 1.2rem;
-}
-
-.category-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem;
-  color: #333;
-}
-
-.category-parent {
-  font-size: 0.9rem;
-  color: #757575;
-  margin-bottom: 1rem;
-}
-
-.category-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.products-count {
-  font-size: 0.9rem;
-  color: #616161;
-}
-
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.status-badge.active {
-  background: rgba(76,175,80,0.1);
-  color: #4CAF50;
-}
-
-.status-badge.inactive {
-  background: rgba(244,67,54,0.1);
-  color: #F44336;
-}
-
-.category-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 50px;
+  height: 50px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  color: #6c757d;
 }
 
-.btn-edit {
-  background: rgba(33,150,243,0.1);
-  color: #2196F3;
+.parent-badge {
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
 }
 
-.btn-edit:hover {
-  background: #2196F3;
-  color: white;
+.products-badge {
+  background-color: #e3f2fd;
+  color: #0d6efd;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
 }
 
-.btn-delete {
-  background: rgba(244,67,54,0.1);
-  color: #F44336;
-}
-
-.btn-delete:hover {
-  background: #F44336;
-  color: white;
-}
-
-.spinner {
-  color: #2196F3;
+.badge {
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.875rem;
 }
 
 .empty-state {
   text-align: center;
-  padding: 3rem;
-  color: #9e9e9e;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.empty-state i {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.custom-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-3 {
+  gap: 1rem;
 }
 </style>
