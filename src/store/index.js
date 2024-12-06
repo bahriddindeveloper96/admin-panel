@@ -93,13 +93,22 @@ export default createStore({
     // Auth actions
     async login({ commit }, credentials) {
       try {
-        const { data } = await axios.post('/auth/login', credentials)
+        console.log('Login request to:', '/admin/login')
+        console.log('Credentials:', credentials)
+        const { data } = await axios.post('/admin/login', credentials)
+        console.log('Login response:', data)
         commit('SET_TOKEN', data.token)
         commit('SET_USER', data.user)
         // Set token in axios default headers
         axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
         return data
       } catch (error) {
+        console.error('Login error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          config: error.config
+        })
         throw error
       }
     },
