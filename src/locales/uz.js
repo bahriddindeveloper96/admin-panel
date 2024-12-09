@@ -276,48 +276,113 @@ export default {
       }
     }
   },
+  // order_details: {
+  //   order_info: {
+  //     title: 'Buyurtma ma\'lumotlari',
+  //     order_id: 'Buyurtma ID',
+  //     status: 'Holat',
+  //     update_status: 'Holatni yangilash',
+  //     date: 'Sana',
+  //     total_amount: 'Umumiy summa',
+  //     tracking_number: 'Kuzatish raqami',
+  //     notes: 'Izohlar'
+  //   },
+  //   customer_info: {
+  //     title: 'Mijoz ma\'lumotlari',
+  //     name: 'Ism',
+  //     email: 'Email',
+  //     phone: 'Telefon'
+  //   },
+  //   order_items: {
+  //     title: 'Buyurtma mahsulotlari',
+  //     product: 'Mahsulot',
+  //     sku: 'Artikul',
+  //     price: 'Narx',
+  //     quantity: 'Soni',
+  //     total: 'Jami',
+  //     subtotal: 'Oraliq summa',
+  //     shipping: 'Yetkazib berish'
+  //   },
+  //   modal: {
+  //     title: 'Buyurtma holatini yangilash',
+  //     status: 'Holat',
+  //     tracking_number: 'Kuzatish raqami',
+  //     notes: 'Izohlar',
+  //     update: 'Holatni yangilash'
+  //   },
+  //   messages: {
+  //     update_success: 'Buyurtma holati muvaffaqiyatli yangilandi'
+  //   }
+  // },
+  // messages: {
+  //   confirm_delete: 'Rostdan ham o\'chirmoqchimisiz?',
+  //   success_save: 'Muvaffaqiyatli saqlandi',
+  //   success_delete: 'Muvaffaqiyatli o\'chirildi',
+  //   error_occurred: 'Xatolik yuz berdi'
+  // }  
   order_details: {
     order_info: {
-      title: 'Buyurtma ma\'lumotlari',
-      order_id: 'Buyurtma ID',
-      status: 'Holat',
-      update_status: 'Holatni yangilash',
-      date: 'Sana',
-      total_amount: 'Umumiy summa',
-      tracking_number: 'Kuzatish raqami',
-      notes: 'Izohlar'
+      title: "Buyurtma haqida ma'lumot",
+      order_number: "Buyurtma raqami",
+      status: "Holat",
+      update_status: "Holatni yangilash",
+      payment_status: "To'lov holati",
+      created_at: "Yaratilgan vaqti",
+      total_amount: "Umumiy summa",
+      delivery_cost: "Yetkazib berish narxi",
+      total_discount: "Chegirma"
     },
     customer_info: {
-      title: 'Mijoz ma\'lumotlari',
-      name: 'Ism',
-      email: 'Email',
-      phone: 'Telefon'
+      title: "Mijoz haqida ma'lumot",
+      name: "Ismi",
+      email: "Elektron pochta",
+      phone: "Telefon"
+    },
+    delivery_info: {
+      title: "Yetkazib berish haqida ma'lumot",
+      name: "Qabul qiluvchi ismi",
+      phone: "Qabul qiluvchi telefoni",
+      address: "Manzil",
+      method: "Yetkazib berish usuli",
+      comment: "Izoh"
     },
     order_items: {
-      title: 'Buyurtma mahsulotlari',
-      product: 'Mahsulot',
-      sku: 'Artikul',
-      price: 'Narx',
-      quantity: 'Soni',
-      total: 'Jami',
-      subtotal: 'Oraliq summa',
-      shipping: 'Yetkazib berish'
+      title: "Buyurtma mahsulotlari",
+      product: "Mahsulot",
+      price: "Narxi",
+      quantity: "Miqdor",
+      total: "Jami",
+      subtotal: "Oraliq summa",
+      delivery_cost: "Yetkazib berish narxi",
+      discount: "Chegirma"
+    },
+    status_history: {
+      title: "Holat tarixi",
+      date: "Sana",
+      from: "Dan",
+      to: "Ga",
+      comment: "Izoh"
     },
     modal: {
-      title: 'Buyurtma holatini yangilash',
-      status: 'Holat',
-      tracking_number: 'Kuzatish raqami',
-      notes: 'Izohlar',
-      update: 'Holatni yangilash'
+      title: "Buyurtma holatini yangilash",
+      status: "Holat",
+      tracking_number: "Kuzatuv raqami",
+      notes: "Eslatmalar",
+      update: "Yangilash"
     },
     messages: {
-      update_success: 'Buyurtma holati muvaffaqiyatli yangilandi'
+      "update_success": "Buyurtma holati muvaffaqiyatli yangilandi"
     }
   },
-  messages: {
-    confirm_delete: 'Rostdan ham o\'chirmoqchimisiz?',
-    success_save: 'Muvaffaqiyatli saqlandi',
-    success_delete: 'Muvaffaqiyatli o\'chirildi',
-    error_occurred: 'Xatolik yuz berdi'
+  orders: {
+    statuses: {
+      pending: "Kutilmoqda",
+      processing: "Qayta ishlanmoqda",
+      shipped: "Jo'natildi",
+      delivered: "Yetkazildi",
+      cancelled: "Bekor qilindi"
+    }
   }
+  
+  
 }

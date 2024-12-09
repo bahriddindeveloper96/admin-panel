@@ -282,42 +282,70 @@ export default {
       }
     }
   },
-  order_details: {
-    order_info: {
-      title: 'Order Information',
-      order_id: 'Order ID',
-      status: 'Status',
-      update_status: 'Update Status',
-      date: 'Date',
-      total_amount: 'Total Amount',
-      tracking_number: 'Tracking Number',
-      notes: 'Notes'
-    },
-    customer_info: {
-      title: 'Customer Information',
-      name: 'Name',
-      email: 'Email',
-      phone: 'Phone'
-    },
-    order_items: {
-      title: 'Order Items',
-      product: 'Product',
-      sku: 'SKU',
-      price: 'Price',
-      quantity: 'Quantity',
-      total: 'Total',
-      subtotal: 'Subtotal',
-      shipping: 'Shipping'
-    },
-    modal: {
-      title: 'Update Order Status',
-      status: 'Status',
-      tracking_number: 'Tracking Number',
-      notes: 'Notes',
-      update: 'Update Status'
-    },
-    messages: {
-      update_success: 'Order status has been updated successfully'
-    }
+  
+order_details: {
+  order_info: {
+    title: "Order Information",
+    order_number: "Order Number",
+    status: "Status",
+    update_status: "Update Status",
+    payment_status: "Payment Status",
+    created_at: "Created At",
+    total_amount: "Total Amount",
+    delivery_cost: "Delivery Cost",
+    total_discount: "Total Discount"
+  },
+  customer_info: {
+    title: "Customer Information",
+    name: "Name",
+    email: "Email",
+    phone: "Phone"
+  },
+  delivery_info: {
+    title: "Delivery Information",
+    name: "Recipient Name",
+    phone: "Recipient Phone",
+    address: "Address",
+    method: "Delivery Method",
+    comment: "Delivery Comment"
+  },
+  order_items: {
+    title: "Order Items",
+    product: "Product",
+    price: "Price",
+    quantity: "Quantity",
+    total: "Total",
+    subtotal: "Subtotal",
+    delivery_cost: "Delivery Cost",
+    discount: "Discount"
+  },
+  status_history: {
+    title: "Status History",
+    date: "Date",
+    from: "From",
+    to: "To",
+    comment: "Comment"
+  },
+  modal: {
+    title: "Update Order Status",
+    status: "Status",
+    tracking_number: "Tracking Number",
+    notes: "Notes",
+    update: "Update"
+  },
+  messages: {
+    update_success: "Order status updated successfully"
   }
+},
+orders: {
+  statuses: {
+    pending: "Pending",
+    processing: "Processing",
+    shipped: "Shipped",
+    delivered: "Delivered",
+    cancelled: "Cancelled"
+  }
+    
+  }
+  
 }
