@@ -1,285 +1,370 @@
 <template>
   <div class="content">
-    <div class="content">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-sm-6">
-            <h1 class="m-0">{{ isEdit ? 'Edit Product' : 'Add Product' }}</h1>
-          </div>
-          <div class="col-sm-6">
-            <div class="float-sm-right">
-              <router-link to="/products" class="btn btn-default">
-                <i class="fas fa-arrow-left"></i> Back to Products
-              </router-link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="content">
-      <div class="container-fluid">
-        <div class="card">
-          <div class="card-body">
-            <form @submit.prevent="handleSubmit">
-              <!-- Basic Information -->
-              <div class="row">
-                <div class="col-md-8">
-                  <div class="form-group">
-                    <label>Product Name</label>
-                    <input
-                      v-model="form.name"
-                      type="text"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.name }"
-                      placeholder="Enter product name"
-                    >
-                    <div class="invalid-feedback">{{ errors.name }}</div>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Description</label>
-                    <textarea
-                      v-model="form.description"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.description }"
-                      rows="4"
-                      placeholder="Enter product description"
-                    ></textarea>
-                    <div class="invalid-feedback">{{ errors.description }}</div>
-                  </div>
-                </div>
-
-                <div class="col-md-4">
-                  <div class="form-group">
-                    <label>Category</label>
-                    <select
-                      v-model="form.category_id"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.category_id }"
-                    >
-                      <option value="">Select Category</option>
-                      <option
-                        v-for="category in categories"
-                        :key="category.id"
-                        :value="category.id"
-                      >
-                        {{ category.name }}
-                      </option>
-                    </select>
-                    <div class="invalid-feedback">{{ errors.category_id }}</div>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Price</label>
-                    <div class="input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text">$</span>
+    <div class="container-fluid">
+      <div class="card">
+        <div class="card-body">
+          <form @submit.prevent="handleSubmit">
+            <!-- Basic Information -->
+            <div class="row">
+              <div class="col-md-8">
+                <!-- Translations -->
+                <div class="card">
+                  <div class="card-header">
+                    <h4>Product Information</h4>
+                    <div class="card-tools">
+                      <div class="btn-group">
+                        <button 
+                          v-for="lang in ['en', 'ru', 'uz']" 
+                          :key="lang"
+                          type="button" 
+                          class="btn btn-sm" 
+                          :class="currentLang === lang ? 'btn-primary' : 'btn-default'"
+                          @click="currentLang = lang"
+                        >
+                          {{ lang.toUpperCase() }}
+                        </button>
                       </div>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-group">
+                      <label>Product Name</label>
                       <input
-                        v-model.number="form.price"
-                        type="number"
-                        step="0.01"
+                        v-model="form.translations[currentLang].name"
+                        type="text"
                         class="form-control"
-                        :class="{ 'is-invalid': errors.price }"
-                        placeholder="0.00"
+                        :placeholder="'Enter product name in ' + currentLang.toUpperCase()"
                       >
-                      <div class="invalid-feedback">{{ errors.price }}</div>
                     </div>
-                  </div>
 
-                  <div class="form-group">
-                    <label>Stock</label>
-                    <input
-                      v-model.number="form.stock"
-                      type="number"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.stock }"
-                      placeholder="Enter stock quantity"
-                    >
-                    <div class="invalid-feedback">{{ errors.stock }}</div>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Status</label>
-                    <select
-                      v-model="form.status"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.status }"
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                    <div class="invalid-feedback">{{ errors.status }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Images -->
-              <div class="row mt-4">
-                <div class="col-md-12">
-                  <h4>Images</h4>
-                  
-                  <div class="form-group">
-                    <label>Main Image</label>
-                    <div class="custom-file">
-                      <input
-                        type="file"
-                        class="custom-file-input"
-                        :class="{ 'is-invalid': errors.image }"
-                        @change="handleMainImageChange"
-                        accept="image/*"
-                      >
-                      <label class="custom-file-label">
-                        {{ mainImageName || 'Choose main image' }}
-                      </label>
-                      <div class="invalid-feedback">{{ errors.image }}</div>
-                    </div>
-                  </div>
-
-                  <div v-if="mainImagePreview || form.image" class="mb-3">
-                    <img
-                      :src="mainImagePreview || form.image"
-                      class="img-thumbnail"
-                      style="max-height: 200px"
-                    >
-                  </div>
-
-                  <div class="form-group">
-                    <label>Gallery Images</label>
-                    <div class="custom-file">
-                      <input
-                        type="file"
-                        class="custom-file-input"
-                        :class="{ 'is-invalid': errors.gallery }"
-                        @change="handleGalleryChange"
-                        accept="image/*"
-                        multiple
-                      >
-                      <label class="custom-file-label">
-                        {{ galleryImagesName || 'Choose gallery images' }}
-                      </label>
-                      <div class="invalid-feedback">{{ errors.gallery }}</div>
-                    </div>
-                  </div>
-
-                  <div v-if="galleryPreviews.length || form.gallery?.length" class="row">
-                    <div
-                      v-for="(preview, index) in galleryPreviews"
-                      :key="'new-' + index"
-                      class="col-md-2 mb-3"
-                    >
-                      <img
-                        :src="preview"
-                        class="img-thumbnail"
-                        style="max-height: 100px"
-                      >
-                      <button
-                        type="button"
-                        class="btn btn-danger btn-sm mt-1"
-                        @click="removeGalleryImage(index)"
-                      >
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </div>
-                    <div
-                      v-for="(image, index) in form.gallery"
-                      :key="'existing-' + index"
-                      class="col-md-2 mb-3"
-                    >
-                      <img
-                        :src="image"
-                        class="img-thumbnail"
-                        style="max-height: 100px"
-                      >
-                      <button
-                        type="button"
-                        class="btn btn-danger btn-sm mt-1"
-                        @click="removeExistingGalleryImage(index)"
-                      >
-                        <i class="fas fa-trash"></i>
-                      </button>
+                    <div class="form-group">
+                      <label>Description</label>
+                      <textarea
+                        v-model="form.translations[currentLang].description"
+                        class="form-control"
+                        rows="4"
+                        :placeholder="'Enter product description in ' + currentLang.toUpperCase()"
+                      ></textarea>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Specifications -->
-              <div class="row mt-4">
-                <div class="col-md-12">
-                  <h4>Specifications</h4>
-                  
-                  <div class="table-responsive">
-                    <table class="table table-bordered">
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>Value</th>
-                          <th width="50">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="(spec, index) in form.specifications" :key="index">
-                          <td>
-                            <input
-                              v-model="spec.name"
-                              type="text"
-                              class="form-control"
-                              placeholder="Specification name"
-                            >
-                          </td>
-                          <td>
-                            <input
-                              v-model="spec.value"
-                              type="text"
-                              class="form-control"
-                              placeholder="Specification value"
-                            >
-                          </td>
-                          <td>
-                            <button
-                              type="button"
-                              class="btn btn-danger btn-sm"
-                              @click="removeSpecification(index)"
-                            >
-                              <i class="fas fa-trash"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      </tbody>
-                      <tfoot>
-                        <tr>
-                          <td colspan="3">
-                            <button
-                              type="button"
-                              class="btn btn-success btn-sm"
-                              @click="addSpecification"
-                            >
-                              <i class="fas fa-plus"></i> Add Specification
-                            </button>
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Submit Button -->
-              <div class="row mt-4">
-                <div class="col-md-12">
-                  <button
-                    type="submit"
-                    class="btn btn-primary"
-                    :disabled="loading"
+                <div class="form-group">
+                  <label>Slug</label>
+                  <input
+                    v-model="form.slug"
+                    type="text"
+                    class="form-control"
+                    placeholder="Enter product slug (e.g. iphone-15-pro)"
                   >
-                    <i class="fas fa-spinner fa-spin" v-if="loading"></i>
-                    {{ isEdit ? 'Update Product' : 'Create Product' }}
-                  </button>
                 </div>
               </div>
-            </form>
-          </div>
+
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label>Category</label>
+                  <select v-model="form.category_id" class="form-control">
+                    <option value="">Select Category</option>
+                    <option v-for="category in categories" :key="category.id" :value="category.id">
+                      {{ category.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="form-check mb-3">
+                  <input type="checkbox" class="form-check-input" id="active" v-model="form.active">
+                  <label class="form-check-label" for="active">Active</label>
+                </div>
+
+                <div class="form-check mb-3">
+                  <input type="checkbox" class="form-check-input" id="featured" v-model="form.featured">
+                  <label class="form-check-label" for="featured">Featured</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Images -->
+            <div class="card mt-4">
+              <div class="card-header">
+                <h4>Product Images</h4>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <input
+                    type="file"
+                    class="form-control"
+                    @change="handleImageUpload"
+                    multiple
+                    accept="image/*"
+                  >
+                  <small class="text-muted">Upload product images (e.g. product-1.jpg, product-2.jpg)</small>
+                </div>
+                <div class="row">
+                  <div v-for="(image, index) in form.images" :key="index" class="col-md-3">
+                    <div class="position-relative">
+                      <img :src="image" class="img-fluid mb-2">
+                      <button 
+                        type="button" 
+                        class="btn btn-danger btn-sm position-absolute" 
+                        style="top: 5px; right: 5px"
+                        @click="removeImage(index)"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Attributes -->
+            <div class="card mt-4">
+              <div class="card-header">
+                <h4>Product Attributes</h4>
+              </div>
+              <div class="card-body">
+                <!-- Predefined Attributes -->
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Brand</label>
+                      <input
+                        v-model="form.attributes.Brand"
+                        type="text"
+                        class="form-control"
+                        placeholder="e.g. Apple, Samsung"
+                      >
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Display Size</label>
+                      <input
+                        v-model="form.attributes['Display Size']"
+                        type="text"
+                        class="form-control"
+                        placeholder="e.g. 6.1 inches"
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Display Resolution</label>
+                      <input
+                        v-model="form.attributes['Display Resolution']"
+                        type="text"
+                        class="form-control"
+                        placeholder="e.g. 2556 x 1179 pixels"
+                      >
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Processor</label>
+                      <input
+                        v-model="form.attributes.Processor"
+                        type="text"
+                        class="form-control"
+                        placeholder="e.g. A17 Pro chip"
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Main Camera</label>
+                      <input
+                        v-model="form.attributes['Main Camera']"
+                        type="text"
+                        class="form-control"
+                        placeholder="e.g. 48MP + 12MP + 12MP"
+                      >
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Front Camera</label>
+                      <input
+                        v-model="form.attributes['Front Camera']"
+                        type="text"
+                        class="form-control"
+                        placeholder="e.g. 12MP TrueDepth"
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Battery Capacity</label>
+                      <input
+                        v-model="form.attributes['Battery Capacity']"
+                        type="text"
+                        class="form-control"
+                        placeholder="e.g. 3274 mAh"
+                      >
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Water Resistance</label>
+                      <input
+                        v-model="form.attributes['Water Resistance']"
+                        type="text"
+                        class="form-control"
+                        placeholder="e.g. IP68"
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Boolean Attributes -->
+                <div class="row mb-3">
+                  <div class="col-md-3">
+                    <div class="form-check">
+                      <input 
+                        type="checkbox" 
+                        class="form-check-input" 
+                        id="fastCharging"
+                        v-model="form.attributes['Fast Charging']"
+                      >
+                      <label class="form-check-label" for="fastCharging">Fast Charging</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-check">
+                      <input 
+                        type="checkbox" 
+                        class="form-check-input" 
+                        id="5gSupport"
+                        v-model="form.attributes['5G Support']"
+                      >
+                      <label class="form-check-label" for="5gSupport">5G Support</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-check">
+                      <input 
+                        type="checkbox" 
+                        class="form-check-input" 
+                        id="nfc"
+                        v-model="form.attributes.NFC"
+                      >
+                      <label class="form-check-label" for="nfc">NFC</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-check">
+                      <input 
+                        type="checkbox" 
+                        class="form-check-input" 
+                        id="wirelessCharging"
+                        v-model="form.attributes['Wireless Charging']"
+                      >
+                      <label class="form-check-label" for="wirelessCharging">Wireless Charging</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Variants -->
+            <div class="card mt-4">
+              <div class="card-header">
+                <h4>Product Variants</h4>
+                <button type="button" class="btn btn-sm btn-primary" @click="addVariant">
+                  <i class="fas fa-plus"></i> Add Variant
+                </button>
+              </div>
+              <div class="card-body">
+                <div v-for="(variant, index) in form.variants" :key="index" class="card mb-3">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label>RAM</label>
+                          <input
+                            v-model="variant.attribute_values.RAM"
+                            type="text"
+                            class="form-control"
+                            placeholder="e.g. 8GB"
+                          >
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label>Storage</label>
+                          <input
+                            v-model="variant.attribute_values.Storage"
+                            type="text"
+                            class="form-control"
+                            placeholder="e.g. 128GB"
+                          >
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label>Color</label>
+                          <input
+                            v-model="variant.attribute_values.Color"
+                            type="text"
+                            class="form-control"
+                            placeholder="e.g. Black"
+                          >
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label>Price</label>
+                          <input
+                            v-model.number="variant.price"
+                            type="number"
+                            step="0.01"
+                            class="form-control"
+                            placeholder="0.00"
+                          >
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label>Stock</label>
+                          <input
+                            v-model.number="variant.stock"
+                            type="number"
+                            class="form-control"
+                            placeholder="0"
+                          >
+                        </div>
+                      </div>
+                      <div class="col-md-4 d-flex align-items-end">
+                        <button 
+                          type="button" 
+                          class="btn btn-danger" 
+                          @click="removeVariant(index)"
+                        >
+                          <i class="fas fa-trash"></i> Remove Variant
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-4">
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save"></i> Save Product
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -287,194 +372,139 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
-import { useStore } from 'vuex'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
 import Swal from 'sweetalert2'
 
 export default {
   name: 'ProductForm',
-
+  
   setup() {
-    const store = useStore()
-    const route = useRoute()
     const router = useRouter()
-    
-    const loading = ref(false)
-    const errors = ref({})
-    const categories = ref([])
-    const mainImagePreview = ref(null)
-    const galleryPreviews = ref([])
-    const mainImageFile = ref(null)
-    const galleryFiles = ref([])
+    const currentLang = ref('en')
 
-    const isEdit = computed(() => !!route.params.id)
-
-    const form = ref({
-      name: '',
-      description: '',
+    // Initialize form with predefined structure
+    const form = reactive({
       category_id: '',
-      price: '',
-      stock: '',
-      status: 'active',
-      specifications: [],
-      gallery: []
+      user_id: 1, // Default user_id
+      slug: '',
+      active: true,
+      featured: false,
+      images: [],
+      attributes: {
+        'Brand': '',
+        'Display Size': '',
+        'Display Resolution': '',
+        'Processor': '',
+        'Main Camera': '',
+        'Front Camera': '',
+        'Battery Capacity': '',
+        'Fast Charging': false,
+        '5G Support': false,
+        'NFC': false,
+        'Wireless Charging': false,
+        'Water Resistance': ''
+      },
+      translations: {
+        en: { name: '', description: '' },
+        ru: { name: '', description: '' },
+        uz: { name: '', description: '' }
+      },
+      variants: []
     })
 
-    const mainImageName = computed(() => {
-      return mainImageFile.value?.name || 'Choose main image'
-    })
+    const categories = ref([])
 
-    const galleryImagesName = computed(() => {
-      return galleryFiles.value.length
-        ? `${galleryFiles.value.length} files selected`
-        : 'Choose gallery images'
-    })
-
-    // Methods
-    const loadCategories = async () => {
+    const fetchCategories = async () => {
       try {
-        const response = await store.dispatch('categories/fetchCategories')
-        categories.value = response
+        const response = await axios.get('/admin/categories')
+        categories.value = response.data
       } catch (error) {
-        console.error('Failed to load categories:', error)
+        console.error('Error fetching categories:', error)
       }
     }
 
-    const loadProduct = async () => {
-      if (!isEdit.value) return
-
-      try {
-        loading.value = true
-        const product = await store.dispatch('products/fetchProduct', route.params.id)
-        form.value = {
-          ...product,
-          specifications: product.specifications || []
-        }
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to load product'
-        })
-        router.push('/products')
-      } finally {
-        loading.value = false
-      }
+    const handleImageUpload = (event) => {
+      const files = event.target.files
+      Array.from(files).forEach(file => {
+        // Store file name instead of base64
+        form.images.push(file.name)
+      })
     }
 
-    const handleMainImageChange = (event) => {
-      const file = event.target.files[0]
-      if (!file) return
-
-      mainImageFile.value = file
-      mainImagePreview.value = URL.createObjectURL(file)
+    const removeImage = (index) => {
+      form.images.splice(index, 1)
     }
 
-    const handleGalleryChange = (event) => {
-      const files = Array.from(event.target.files)
-      if (!files.length) return
-
-      galleryFiles.value = files
-      galleryPreviews.value = files.map(file => URL.createObjectURL(file))
+    const addVariant = () => {
+      form.variants.push({
+        attribute_values: {
+          RAM: '',
+          Storage: '',
+          Color: ''
+        },
+        price: 0,
+        stock: 0
+      })
     }
 
-    const removeGalleryImage = (index) => {
-      galleryFiles.value.splice(index, 1)
-      galleryPreviews.value.splice(index, 1)
-    }
-
-    const removeExistingGalleryImage = (index) => {
-      form.value.gallery.splice(index, 1)
-    }
-
-    const addSpecification = () => {
-      form.value.specifications.push({ name: '', value: '' })
-    }
-
-    const removeSpecification = (index) => {
-      form.value.specifications.splice(index, 1)
+    const removeVariant = (index) => {
+      form.variants.splice(index, 1)
     }
 
     const handleSubmit = async () => {
       try {
-        loading.value = true
-        errors.value = {}
-
-        const formData = new FormData()
-        
-        // Append basic fields
-        Object.keys(form.value).forEach(key => {
-          if (key !== 'image' && key !== 'gallery' && key !== 'specifications') {
-            formData.append(key, form.value[key])
-          }
-        })
-
-        // Append specifications
-        formData.append('specifications', JSON.stringify(form.value.specifications))
-
-        // Append images
-        if (mainImageFile.value) {
-          formData.append('image', mainImageFile.value)
-        }
-
-        galleryFiles.value.forEach(file => {
-          formData.append('gallery[]', file)
-        })
-
-        if (isEdit.value) {
-          await store.dispatch('products/updateProduct', {
-            id: route.params.id,
-            productData: formData
+        // Validate if at least one variant exists
+        if (form.variants.length === 0) {
+          form.variants.push({
+            attribute_values: {
+              RAM: '',
+              Storage: '',
+              Color: ''
+            },
+            price: 0,
+            stock: 0
           })
-        } else {
-          await store.dispatch('products/createProduct', formData)
         }
 
+        // Ensure all variants have price and stock
+        form.variants.forEach(variant => {
+          if (!variant.price) variant.price = 0
+          if (!variant.stock) variant.stock = 0
+        })
+
+        // Log the form data to check its structure
+        console.log('Form data:', form);
+
+        const response = await axios.post('/admin/products', form)
         Swal.fire({
           icon: 'success',
-          title: 'Success',
-          text: `Product ${isEdit.value ? 'updated' : 'created'} successfully`
+          title: 'Success!',
+          text: 'Product has been created successfully.'
         })
-
-        router.push('/products')
+        router.push('/admin/products')
       } catch (error) {
-        if (error.response?.status === 422) {
-          errors.value = error.response.data.errors
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: `Failed to ${isEdit.value ? 'update' : 'create'} product`
-          })
-        }
-      } finally {
-        loading.value = false
+        console.error('Error creating product:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: error.response?.data?.message || 'Something went wrong!'
+        })
       }
     }
 
-    // Lifecycle hooks
-    onMounted(() => {
-      loadCategories()
-      loadProduct()
-    })
+    // Fetch categories when component mounts
+    fetchCategories()
 
     return {
       form,
-      loading,
-      errors,
       categories,
-      isEdit,
-      mainImagePreview,
-      galleryPreviews,
-      mainImageName,
-      galleryImagesName,
-      handleMainImageChange,
-      handleGalleryChange,
-      removeGalleryImage,
-      removeExistingGalleryImage,
-      addSpecification,
-      removeSpecification,
+      currentLang,
+      handleImageUpload,
+      removeImage,
+      addVariant,
+      removeVariant,
       handleSubmit
     }
   }
@@ -482,12 +512,9 @@ export default {
 </script>
 
 <style scoped>
-.custom-file-input:lang(en)~.custom-file-label::after {
-  content: "Browse";
-}
-
-.img-thumbnail {
-  object-fit: cover;
-  width: 100%;
+.card-tools {
+  position: absolute;
+  right: 1rem;
+  top: 0.5rem;
 }
 </style>
