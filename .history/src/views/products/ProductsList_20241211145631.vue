@@ -4,12 +4,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0">{{ $t("products.title") }}</h1>
+            <h1 class="m-0">{{ $t('products.title') }}</h1>
           </div>
           <div class="col-sm-6">
             <div class="float-sm-right">
               <router-link to="/products/create" class="btn btn-primary">
-                <i class="fas fa-plus"></i> {{ $t("products.add_product") }}
+                <i class="fas fa-plus"></i> {{ $t('products.add_product') }}
               </router-link>
             </div>
           </div>
@@ -23,21 +23,21 @@
           <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
               <div class="d-flex gap-3">
-                <button
-                  class="btn btn-danger d-flex align-items-center gap-2"
+                <button 
+                  class="btn btn-danger d-flex align-items-center gap-2" 
                   :disabled="!selectedProducts.length || isLoading"
                   @click="deleteSelected"
                 >
                   <i class="fas fa-trash"></i>
-                  <span>{{ $t("common.delete_selected") }}</span>
+                  <span>{{ $t('common.delete_selected') }}</span>
                 </button>
-                <button
-                  class="btn btn-success d-flex align-items-center gap-2"
+                <button 
+                  class="btn btn-success d-flex align-items-center gap-2" 
                   :disabled="isLoading"
                   @click="exportProducts"
                 >
                   <i class="fas fa-file-export"></i>
-                  <span>{{ $t("common.export") }}</span>
+                  <span>{{ $t('common.export') }}</span>
                 </button>
               </div>
               <div class="search-box">
@@ -49,7 +49,7 @@
                   v-model="filters.search"
                   @input="handleSearch"
                   :disabled="isLoading"
-                />
+                >
               </div>
             </div>
           </div>
@@ -65,28 +65,24 @@
                       :checked="isAllSelected"
                       @change="toggleSelectAll"
                       :disabled="isLoading"
-                    />
+                    >
                   </th>
-                  <th>{{ $t("products.table.image") }}</th>
-                  <th>{{ $t("products.table.name") }}</th>
-                  <th>{{ $t("products.table.category") }}</th>
-                  <th>{{ $t("products.table.price") }}</th>
-                  <th>{{ $t("products.table.stock") }}</th>
-                  <th>{{ $t("products.table.status") }}</th>
-                  <th class="text-center">{{ $t("common.actions") }}</th>
+                  <th>{{ $t('products.table.image') }}</th>
+                  <th>{{ $t('products.table.name') }}</th>
+                  <th>{{ $t('products.table.category') }}</th>
+                  <th>{{ $t('products.table.price') }}</th>
+                  <th>{{ $t('products.table.stock') }}</th>
+                  <th>{{ $t('products.table.status') }}</th>
+                  <th class="text-center">{{ $t('common.actions') }}</th>
                 </tr>
               </thead>
               <tbody>
                 <template v-if="isLoading">
                   <tr>
                     <td colspan="8">
-                      <div
-                        class="d-flex justify-content-center align-items-center py-5"
-                      >
+                      <div class="d-flex justify-content-center align-items-center py-5">
                         <div class="spinner-border" role="status">
-                          <span class="sr-only">{{
-                            $t("common.loading")
-                          }}</span>
+                          <span class="sr-only">{{ $t('common.loading') }}</span>
                         </div>
                       </div>
                     </td>
@@ -97,7 +93,7 @@
                     <td colspan="8">
                       <div class="empty-state">
                         <i class="fas fa-box-open"></i>
-                        <p class="mb-0">{{ $t("products.no_products") }}</p>
+                        <p class="mb-0">{{ $t('products.no_products') }}</p>
                       </div>
                     </td>
                   </tr>
@@ -110,33 +106,21 @@
                         class="custom-checkbox"
                         :value="product.id"
                         v-model="selectedProducts"
-                      />
+                      >
                     </td>
                     <td>
-                      <vue-carousel
-                        :autoplay="true"
-                        :loop="true"
-                        class="product-slider"
+                      <img
+                        :src="product.images[0]"
+                        :alt="product.name"
+                        class="product-image"
                       >
-                        <img
-                          v-for="(image, index) in product.images"
-                          :key="index"
-                          :src="image"
-                          :alt="`${product.name} - Image ${index + 1}`"
-                          class="slider-image"
-                        />
-                      </vue-carousel>
                     </td>
                     <td>
                       <div class="fw-medium">{{ product.name }}</div>
-                      <small class="text-muted"
-                        >{{ $t("common.id") }}: {{ product.id }}</small
-                      >
+                      <small class="text-muted">{{ $t('common.id') }}: {{ product.id }}</small>
                     </td>
                     <td>
-                      <span class="category-badge">{{
-                        product.category?.name || $t("products.uncategorized")
-                      }}</span>
+                      <span class="category-badge">{{ product.category?.name || $t('products.uncategorized') }}</span>
                     </td>
                     <td>
                       <div class="price-badge">
@@ -160,11 +144,7 @@
                     </td>
                     <td>
                       <span :class="getStatusBadgeClass(product.active)">
-                        {{
-                          product.active
-                            ? $t("common.status.active")
-                            : $t("common.status.inactive")
-                        }}
+                        {{ product.active ? $t('common.status.active') : $t('common.status.inactive') }}
                       </span>
                     </td>
                     <td>
@@ -209,182 +189,177 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from "vue";
-import { useStore } from "vuex";
-import Swal from "sweetalert2";
-import VueCarousel from "@chenfengyuan/vue-carousel";
-import Pagination from "@/components/Pagination.vue";
+import { ref, computed, onMounted } from 'vue'
+import { useStore } from 'vuex'
+import Swal from 'sweetalert2'
+import Pagination from '@/components/Pagination.vue'
 
 export default {
-  name: "ProductsList",
-  components: { Pagination, VueCarousel },
-
+  name: 'ProductsList',
+  components: { Pagination },
+  
   setup() {
-    const store = useStore();
-    const selectedProducts = ref([]);
+    const store = useStore()
+    const selectedProducts = ref([])
     const filters = ref({
-      search: "",
-      category: "",
-      status: "",
-      page: 1,
-    });
+      search: '',
+      category: '',
+      status: '',
+      page: 1
+    })
 
     // Methods
     const loadProducts = async () => {
       try {
-        await store.dispatch("products/fetchProducts", filters.value);
+        await store.dispatch('products/fetchProducts', filters.value)
       } catch (error) {
         Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error.message,
-        });
+          icon: 'error',
+          title: 'Error',
+          text: error.message
+        })
       }
-    };
+    }
 
     const handleSearch = () => {
-      filters.value.page = 1;
-      loadProducts();
-    };
+      filters.value.page = 1
+      loadProducts()
+    }
 
     const handlePageChange = (page) => {
-      filters.value.page = page;
-      loadProducts();
-    };
+      filters.value.page = page
+      loadProducts()
+    }
 
     const deleteProduct = async (id) => {
       try {
         const result = await Swal.fire({
-          title: "Are you sure?",
+          title: 'Are you sure?',
           text: "You won't be able to revert this!",
-          icon: "warning",
+          icon: 'warning',
           showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Yes, delete it!",
-        });
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete it!'
+        })
 
         if (result.isConfirmed) {
-          await store.dispatch("products/deleteProduct", id);
-          await loadProducts();
-          Swal.fire("Deleted!", "Product has been deleted.", "success");
+          await store.dispatch('products/deleteProduct', id)
+          await loadProducts()
+          Swal.fire(
+            'Deleted!',
+            'Product has been deleted.',
+            'success'
+          )
         }
       } catch (error) {
         Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error.message,
-        });
+          icon: 'error',
+          title: 'Error',
+          text: error.message
+        })
       }
-    };
+    }
 
     const deleteSelected = async () => {
-      if (!selectedProducts.value.length) return;
+      if (!selectedProducts.value.length) return
 
       try {
         const result = await Swal.fire({
-          title: "Are you sure?",
+          title: 'Are you sure?',
           text: "You won't be able to revert this!",
-          icon: "warning",
+          icon: 'warning',
           showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Yes, delete them!",
-        });
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete them!'
+        })
 
         if (result.isConfirmed) {
-          await store.dispatch(
-            "products/deleteProducts",
-            selectedProducts.value
-          );
-          selectedProducts.value = [];
-          await loadProducts();
+          await store.dispatch('products/deleteProducts', selectedProducts.value)
+          selectedProducts.value = []
+          await loadProducts()
           Swal.fire(
-            "Deleted!",
-            "Selected products have been deleted.",
-            "success"
-          );
+            'Deleted!',
+            'Selected products have been deleted.',
+            'success'
+          )
         }
       } catch (error) {
         Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error.message,
-        });
+          icon: 'error',
+          title: 'Error',
+          text: error.message
+        })
       }
-    };
+    }
 
     const exportProducts = async () => {
       try {
-        await store.dispatch("products/exportProducts", filters.value);
+        await store.dispatch('products/exportProducts', filters.value)
       } catch (error) {
         Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error.message,
-        });
+          icon: 'error',
+          title: 'Error',
+          text: error.message
+        })
       }
-    };
+    }
 
     // Computed
     const products = computed(() => {
-      const productsData = store.getters["products/getProducts"];
+      const productsData = store.getters['products/getProducts']
       return {
         data: productsData?.data || [],
         total: productsData?.total || 0,
         per_page: productsData?.per_page || 10,
         current_page: productsData?.current_page || 1,
-        links: productsData?.links || [],
-      };
-    });
-
+        links: productsData?.links || []
+      }
+    })
+    
     const isAllSelected = computed(() => {
-      const productsData = products.value?.data || [];
-      return (
-        productsData.length > 0 &&
-        selectedProducts.value.length === productsData.length
-      );
-    });
+      const productsData = products.value?.data || []
+      return productsData.length > 0 && selectedProducts.value.length === productsData.length
+    })
 
-    const isLoading = computed(() => store.getters["products/isLoading"]);
-
+    const isLoading = computed(() => store.getters['products/isLoading'])
+    
     const toggleSelectAll = () => {
       if (isAllSelected.value) {
-        selectedProducts.value = [];
+        selectedProducts.value = []
       } else {
-        selectedProducts.value = products.value.data.map(
-          (product) => product.id
-        );
+        selectedProducts.value = products.value.data.map(product => product.id)
       }
-    };
+    }
 
     // Formatting functions
     const formatCurrency = (value) => {
-      return new Intl.NumberFormat("uz-UZ", {
-        style: "currency",
-        currency: "UZS",
-      }).format(value);
-    };
+      return new Intl.NumberFormat('uz-UZ', {
+        style: 'currency',
+        currency: 'UZS'
+      }).format(value)
+    }
 
     const formatPriceRange = (variants) => {
-      const prices = variants.map((variant) => variant.price);
-      const minPrice = Math.min(...prices);
-      const maxPrice = Math.max(...prices);
-      return `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`;
-    };
+      const prices = variants.map(variant => variant.price)
+      const minPrice = Math.min(...prices)
+      const maxPrice = Math.max(...prices)
+      return `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
+    }
 
     const getTotalStock = (variants) => {
-      return variants.reduce((total, variant) => total + variant.stock, 0);
-    };
+      return variants.reduce((total, variant) => total + variant.stock, 0)
+    }
 
     const getStatusBadgeClass = (active) => {
-      return active ? "badge badge-success" : "badge badge-danger";
-    };
+      return active ? 'badge badge-success' : 'badge badge-danger'
+    }
 
     // Lifecycle
     onMounted(() => {
-      loadProducts();
-    });
+      loadProducts()
+    })
 
     return {
       products,
@@ -401,31 +376,13 @@ export default {
       formatCurrency,
       formatPriceRange,
       getTotalStock,
-      getStatusBadgeClass,
-    };
-  },
-};
+      getStatusBadgeClass
+    }
+  }
+}
 </script>
 
 <style scoped>
-.product-slider {
-  max-width: 80px;
-  max-height: 80px;
-  margin: 0 auto;
-  position: relative;
-}
-
-.slider-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-  transition: transform 0.2s;
-}
-
-.slider-image:hover {
-  transform: scale(1.05);
-}
 .card {
   border: none;
   border-radius: 15px;

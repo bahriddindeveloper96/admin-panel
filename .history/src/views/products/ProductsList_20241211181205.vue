@@ -408,24 +408,6 @@ export default {
 </script>
 
 <style scoped>
-.product-slider {
-  max-width: 80px;
-  max-height: 80px;
-  margin: 0 auto;
-  position: relative;
-}
-
-.slider-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-  transition: transform 0.2s;
-}
-
-.slider-image:hover {
-  transform: scale(1.05);
-}
 .card {
   border: none;
   border-radius: 15px;

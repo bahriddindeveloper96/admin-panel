@@ -113,19 +113,11 @@
                       />
                     </td>
                     <td>
-                      <vue-carousel
-                        :autoplay="true"
-                        :loop="true"
-                        class="product-slider"
-                      >
-                        <img
-                          v-for="(image, index) in product.images"
-                          :key="index"
-                          :src="image"
-                          :alt="`${product.name} - Image ${index + 1}`"
-                          class="slider-image"
-                        />
-                      </vue-carousel>
+                      <!-- <img
+                        :src="product.images[0]"
+                        :alt="product.name"
+                        class="product-image"
+                      > -->
                     </td>
                     <td>
                       <div class="fw-medium">{{ product.name }}</div>
@@ -212,12 +204,11 @@
 import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import Swal from "sweetalert2";
-import VueCarousel from "@chenfengyuan/vue-carousel";
 import Pagination from "@/components/Pagination.vue";
 
 export default {
   name: "ProductsList",
-  components: { Pagination, VueCarousel },
+  components: { Pagination },
 
   setup() {
     const store = useStore();
@@ -408,24 +399,6 @@ export default {
 </script>
 
 <style scoped>
-.product-slider {
-  max-width: 80px;
-  max-height: 80px;
-  margin: 0 auto;
-  position: relative;
-}
-
-.slider-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-  transition: transform 0.2s;
-}
-
-.slider-image:hover {
-  transform: scale(1.05);
-}
 .card {
   border: none;
   border-radius: 15px;

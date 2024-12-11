@@ -386,18 +386,6 @@
                           />
                         </div>
                       </div>
-                      <div class="col-md-4">
-                        <div class="form-group">
-                          <label>Images</label>
-                          <input
-                            type="file"
-                            class="form-control"
-                            @change="(event) => handleImageUpload(event, index)"
-                            multiple
-                            accept="image/*"
-                          />
-                        </div>
-                      </div>
                       <div class="col-md-4 d-flex align-items-end">
                         <button
                           type="button"
@@ -406,25 +394,6 @@
                         >
                           <i class="fas fa-trash"></i> Remove Variant
                         </button>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div
-                        v-for="(image, imgIndex) in variant.images"
-                        :key="imgIndex"
-                        class="col-md-3"
-                      >
-                        <div class="position-relative">
-                          <img :src="image" class="img-fluid mb-2" />
-                          <button
-                            type="button"
-                            class="btn btn-danger btn-sm position-absolute"
-                            style="top: 5px; right: 5px"
-                            @click="removeImage(index, imgIndex)"
-                          >
-                            <i class="fas fa-times"></i>
-                          </button>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -500,25 +469,22 @@ export default {
       }
     };
 
-    const handleImageUpload = (event, variantIndex) => {
+    const handleImageUpload = (event) => {
       const files = event.target.files;
       Array.from(files).forEach((file) => {
         const reader = new FileReader();
 
         reader.onload = (e) => {
-          // Save file in base64 format
-          if (!form.variants[variantIndex].images) {
-            form.variants[variantIndex].images = [];
-          }
-          form.variants[variantIndex].images.push(e.target.result);
+          // Faylni base64 formatida saqlaymiz
+          form.images.push(e.target.result);
         };
 
-        reader.readAsDataURL(file); // Convert file to base64
+        reader.readAsDataURL(file); // Faylni base64 formatiga o‘giradi
       });
     };
 
-    const removeImage = (variantIndex, imageIndex) => {
-      form.variants[variantIndex].images.splice(imageIndex, 1);
+    const removeImage = (index) => {
+      form.images.splice(index, 1);
     };
 
     const addVariant = () => {
@@ -530,7 +496,6 @@ export default {
         },
         price: 0,
         stock: 0,
-        images: [], // Initialize images for the new variant
       });
     };
 
@@ -550,7 +515,6 @@ export default {
             },
             price: 0,
             stock: 0,
-            images: [], // Initialize images for the new variant
           });
         }
 
@@ -560,14 +524,15 @@ export default {
           if (!variant.stock) variant.stock = 0;
         });
 
-        const response = await axios.post("/admin/products", form);
+        // Log the form data to check its structure
+        console.log("Form data:", form);
 
+        const response = await axios.post("/admin/products", form);
         Swal.fire({
           icon: "success",
           title: "Success!",
           text: "Product has been created successfully.",
         });
-
         router.push("/admin/products");
       } catch (error) {
         console.error("Error creating product:", error);
