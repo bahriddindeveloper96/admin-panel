@@ -500,99 +500,59 @@ export default {
       }
     };
 
-    // const handleImageUpload = async (event, variantIndex = null) => {
+    // const handleImageUpload = (event, variantIndex) => {
     //   const files = event.target.files;
-
-    //   const formData = new FormData();
-
     //   Array.from(files).forEach((file) => {
-    //     formData.append("images[]", file);
-    //   });
+    //     const reader = new FileReader();
 
-    //   try {
-    //     const response = await axios.post(
-    //       "/admin/products/upload-images",
-    //       formData,
-    //       {
-    //         headers: {
-    //           "Content-Type": "multipart/form-data",
-    //         },
-    //       }
-    //     );
-
-    //     // Backenddan kelgan nisbiy yo'llarni olamiz
-    //     const relativePaths = response.data.paths;
-
-    //     // Hozirgi sayt domenini olish uchun `window.location.origin` ishlatamiz
-    //     const baseURL = "127.0.0.1:8000";
-
-    //     // To'liq yo'lni generatsiya qilish
-    //     const imagePaths = relativePaths.map((path) => `${baseURL}${path}`);
-
-    //     if (variantIndex !== null) {
-    //       // Variant uchun rasm yo'llarini qo'shish
+    //     reader.onload = (e) => {
+    //       // Save file in base64 format
     //       if (!form.variants[variantIndex].images) {
     //         form.variants[variantIndex].images = [];
     //       }
-    //       form.variants[variantIndex].images.push(...imagePaths);
-    //     } else {
-    //       // Asosiy form uchun rasm yo'llarini qo'shish
-    //       form.images.push(...imagePaths);
-    //     }
-    //   } catch (error) {
-    //     console.error("Error uploading images:", error);
-    //     Swal.fire({
-    //       icon: "error",
-    //       title: "Error!",
-    //       text: error.response?.data?.message || "Failed to upload images.",
-    //     });
-    //   }
+    //       form.variants[variantIndex].images.push(e.target.result);
+    //     };
+
+    //     reader.readAsDataURL(file); // Convert file to base64
+    //   });
     // };
-
     const handleImageUpload = async (event, variantIndex = null) => {
-  const files = event.target.files;
-  const formData = new FormData();
+      const files = event.target.files;
+      const formData = new FormData();
 
-  Array.from(files).forEach((file) => {
-    formData.append("images[]", file);
-  });
+      Array.from(files).forEach((file) => {
+        formData.append("images[]", file); // API bir nechta rasmni qabul qilishi kerak
+      });
 
-  try {
-    const response = await axios.post(
-      "/admin/products/upload-images",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      try {
+        const response = await axios.post("/admin/upload-images", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        // Serverdan qaytgan yo'llarni saqlash
+        const imagePaths = response.data.paths;
+
+        if (variantIndex !== null) {
+          // Variant uchun rasm yo'llarini qo'shish
+          if (!form.variants[variantIndex].images) {
+            form.variants[variantIndex].images = [];
+          }
+          form.variants[variantIndex].images.push(...imagePaths);
+        } else {
+          // Asosiy form uchun rasm yo'llarini qo'shish
+          form.images.push(...imagePaths);
+        }
+      } catch (error) {
+        console.error("Error uploading images:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: error.response?.data?.message || "Failed to upload images.",
+        });
       }
-    );
-
-    const relativePaths = response.data.paths;
-    const baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-
-    // Rasmlarning to'liq URL manzilini yaratish
-    const imagePaths = relativePaths.map((path) => 
-      path.startsWith('http') ? path : `${baseURL}${path}`
-    );
-
-    if (variantIndex !== null) {
-      if (!form.variants[variantIndex].images) {
-        form.variants[variantIndex].images = [];
-      }
-      form.variants[variantIndex].images.push(...imagePaths);
-    } else {
-      form.images.push(...imagePaths);
-    }
-  } catch (error) {
-    console.error("Error uploading images:", error);
-    Swal.fire({
-      icon: "error",
-      title: "Error!",
-      text: error.response?.data?.message || "Failed to upload images.",
-    });
-  }
-};
+    };
 
     const removeImage = (variantIndex, imageIndex) => {
       form.variants[variantIndex].images.splice(imageIndex, 1);

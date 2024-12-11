@@ -113,27 +113,25 @@
                       />
                     </td>
                     <td>
-                      <div class="variants-container">
-                        <div
-                          v-for="variant in product.variants.slice(0, 1)"
-                          :key="variant.id"
-                          class="variant-images"
+                      <div
+                        v-for="variant in product.variants"
+                        :key="variant.id"
+                      >
+                        <vue-carousel
+                          :autoplay="true"
+                          :loop="true"
+                          class="product-slider"
                         >
-                          <vue-carousel
-                            :autoplay="true"
-                            :loop="true"
-                            class="product-slider"
-                          >
-                            <img
-                              v-for="(image, index) in variant.images"
-                              :key="index"
-                              :src="`${base_url}/${image}`"
-                              :alt="`${product.name} - Image ${index + 1}`"
-                              class="slider-image"
-                              @error="handleImageError"
-                            />
-                          </vue-carousel>
-                        </div>
+                          <img
+                            v-for="(image, index) in variant.images"
+                            :key="index"
+                            :src="image"
+                            :alt="`${product.name} - Variant ${
+                              variant.id
+                            } - Image ${index + 1}`"
+                            class="slider-image"
+                          />
+                        </vue-carousel>
                       </div>
                     </td>
                     <td>
@@ -230,7 +228,6 @@ export default {
 
   setup() {
     const store = useStore();
-    const base_url = import.meta.env.VITE_API_URL || '';
     const selectedProducts = ref([]);
     const filters = ref({
       search: "",
@@ -336,10 +333,6 @@ export default {
       }
     };
 
-    const handleImageError = (e) => {
-      e.target.src = '/placeholder-image.jpg';
-    };
-
     // Computed
     const products = computed(() => {
       const productsData = store.getters["products/getProducts"];
@@ -401,7 +394,6 @@ export default {
     });
 
     return {
-      base_url,
       products,
       selectedProducts,
       filters,
@@ -417,7 +409,6 @@ export default {
       formatPriceRange,
       getTotalStock,
       getStatusBadgeClass,
-      handleImageError,
     };
   },
 };
@@ -442,7 +433,6 @@ export default {
 .slider-image:hover {
   transform: scale(1.05);
 }
-
 .card {
   border: none;
   border-radius: 15px;
@@ -647,44 +637,5 @@ export default {
   padding: 0.4rem 0.8rem;
   border-radius: 50px;
   font-weight: 500;
-}
-
-.variants-container {
-  max-width: 200px;
-  margin: 0 auto;
-}
-
-.variant-images {
-  margin-bottom: 10px;
-}
-
-.product-slider {
-  width: 100%;
-  height: 150px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.slider-image {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.VueCarousel-navigation-button {
-  background: rgba(0, 0, 0, 0.5) !important;
-  border-radius: 50%;
-  color: white !important;
-  padding: 5px !important;
-  margin: 0 5px !important;
-}
-
-.VueCarousel-pagination {
-  margin-top: 5px !important;
-}
-
-.VueCarousel-dot {
-  margin: 0 3px !important;
 }
 </style>
