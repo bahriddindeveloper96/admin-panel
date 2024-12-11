@@ -24,64 +24,73 @@
             <form @submit.prevent="handleSubmit">
               <div class="row">
                 <div class="col-md-8">
-                  <!-- Basic Information -->
+                  <!-- Slug -->
                   <div class="form-group">
-                    <label>Category Name</label>
+                    <label>Slug</label>
                     <input
-                      v-model="form.name"
+                      v-model="form.slug"
                       type="text"
                       class="form-control"
-                      :class="{ 'is-invalid': errors.name }"
-                      placeholder="Enter category name"
+                      :class="{ 'is-invalid': errors.slug }"
+                      placeholder="Enter category slug"
                     >
-                    <div class="invalid-feedback">{{ errors.name }}</div>
+                    <div class="invalid-feedback">{{ errors.slug }}</div>
                   </div>
 
-                  <div class="form-group">
-                    <label>Description</label>
-                    <textarea
-                      v-model="form.description"
+                  <!-- Translations -->
+                  <div class="form-group" v-for="locale in ['en', 'ru', 'uz']" :key="locale">
+                    <label>Name ({{ locale }})</label>
+                    <input
+                      v-model="form.translations[locale].name"
+                      type="text"
                       class="form-control"
-                      :class="{ 'is-invalid': errors.description }"
-                      rows="4"
-                      placeholder="Enter category description"
+                      :class="{ 'is-invalid': errors[`translations.${locale}.name`] }"
+                      placeholder="Enter category name in {{ locale }}"
+                    >
+                    <div class="invalid-feedback">{{ errors[`translations.${locale}.name`] }}</div>
+
+                    <label>Description ({{ locale }})</label>
+                    <textarea
+                      v-model="form.translations[locale].description"
+                      class="form-control"
+                      :class="{ 'is-invalid': errors[`translations.${locale}.description`] }"
+                      rows="3"
+                      placeholder="Enter category description in {{ locale }}"
                     ></textarea>
-                    <div class="invalid-feedback">{{ errors.description }}</div>
+                    <div class="invalid-feedback">{{ errors[`translations.${locale}.description`] }}</div>
                   </div>
                 </div>
 
                 <div class="col-md-4">
                   <!-- Settings -->
                   <div class="form-group">
-                    <label>Parent Category</label>
-                    <select
-                      v-model="form.parent_id"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.parent_id }"
-                    >
-                      <option value="">None (Root Category)</option>
-                      <option
-                        v-for="category in availableParentCategories"
-                        :key="category.id"
-                        :value="category.id"
+                    <label>Status</label>
+                    <div class="custom-control custom-switch">
+                      <input
+                        type="checkbox"
+                        class="custom-control-input"
+                        id="activeSwitch"
+                        v-model="form.active"
                       >
-                        {{ category.name }}
-                      </option>
-                    </select>
-                    <div class="invalid-feedback">{{ errors.parent_id }}</div>
+                      <label class="custom-control-label" for="activeSwitch">
+                        {{ form.active ? 'Active' : 'Inactive' }}
+                      </label>
+                    </div>
                   </div>
 
                   <div class="form-group">
-                    <label>Status</label>
-                    <select
-                      v-model="form.status"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.status }"
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                    <div class="invalid-feedback">{{ errors.status }}</div>
+                    <label>Featured</label>
+                    <div class="custom-control custom-switch">
+                      <input
+                        type="checkbox"
+                        class="custom-control-input"
+                        id="featuredSwitch"
+                        v-model="form.featured"
+                      >
+                      <label class="custom-control-label" for="featuredSwitch">
+                        {{ form.featured ? 'Featured' : 'Not Featured' }}
+                      </label>
+                    </div>
                   </div>
 
                   <!-- Image Upload -->
@@ -100,28 +109,23 @@
                       </label>
                       <div class="invalid-feedback">{{ errors.image }}</div>
                     </div>
-                  </div>
-
-                  <div v-if="imagePreview || form.image" class="mt-2">
-                    <img
-                      :src="imagePreview || form.image"
-                      class="img-fluid img-thumbnail"
-                      alt="Category image"
+                    <img 
+                      v-if="imagePreview" 
+                      :src="imagePreview" 
+                      class="mt-2 img-fluid"
+                      style="max-height: 200px"
                     >
                   </div>
                 </div>
-              </div>
 
-              <!-- Submit Button -->
-              <div class="row mt-4">
-                <div class="col-md-12">
-                  <button
-                    type="submit"
+                <div class="col-12 mt-4">
+                  <button 
+                    type="submit" 
                     class="btn btn-primary"
                     :disabled="loading"
                   >
-                    <i class="fas fa-spinner fa-spin" v-if="loading"></i>
-                    {{ isEdit ? 'Update Category' : 'Create Category' }}
+                    <i class="fas fa-spinner fa-spin mr-2" v-if="loading"></i>
+                    {{ isEdit ? 'Update' : 'Create' }} Category
                   </button>
                 </div>
               </div>
@@ -138,6 +142,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
+import axios from 'axios'
 
 export default {
   name: 'CategoryForm',
@@ -151,38 +156,30 @@ export default {
     const errors = ref({})
     const imageFile = ref(null)
     const imagePreview = ref(null)
-    const categories = ref([])
 
     const isEdit = computed(() => !!route.params.id)
 
     const form = ref({
-      name: '',
-      description: '',
-      parent_id: '',
-      status: 'active',
-      image: null
+      slug: '',
+      active: true,
+      featured: false,
+      translations: {
+        en: { name: '', description: '' },
+        ru: { name: '', description: '' },
+        uz: { name: '', description: '' }
+      }
     })
 
     const imageName = computed(() => {
       return imageFile.value?.name || 'Choose image'
     })
 
-    const availableParentCategories = computed(() => {
-      if (!isEdit.value) return categories.value
-      // Filter out current category and its descendants to prevent circular references
-      return categories.value.filter(category => 
-        category.id !== parseInt(route.params.id)
-      )
-    })
+    const handleImageChange = (event) => {
+      const file = event.target.files[0]
+      if (!file) return
 
-    // Methods
-    const loadCategories = async () => {
-      try {
-        const response = await store.dispatch('categories/fetchCategories')
-        categories.value = response
-      } catch (error) {
-        console.error('Failed to load categories:', error)
-      }
+      imageFile.value = file
+      imagePreview.value = URL.createObjectURL(file)
     }
 
     const loadCategory = async () => {
@@ -190,13 +187,18 @@ export default {
 
       try {
         loading.value = true
-        const category = await store.dispatch('categories/fetchCategory', route.params.id)
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/admin/categories/${route.params.id}`)
+        const category = response.data.data
+
         form.value = {
-          name: category.name,
-          description: category.description,
-          parent_id: category.parent_id,
-          status: category.status,
-          image: category.image_url
+          slug: category.slug,
+          active: category.active,
+          featured: category.featured,
+          translations: category.translations
+        }
+
+        if (category.image_url) {
+          imagePreview.value = category.image_url
         }
       } catch (error) {
         Swal.fire({
@@ -210,67 +212,71 @@ export default {
       }
     }
 
-    const handleImageChange = (event) => {
-      const file = event.target.files[0]
-      if (!file) return
-
-      imageFile.value = file
-      imagePreview.value = URL.createObjectURL(file)
-    }
-
     const handleSubmit = async () => {
-      try {
-        loading.value = true
-        errors.value = {}
+  try {
+    loading.value = true;
+    errors.value = {};
 
-        const formData = new FormData()
-        
-        // Append basic fields
-        Object.keys(form.value).forEach(key => {
-          if (key !== 'image') {
-            formData.append(key, form.value[key])
-          }
-        })
+    const formData = new FormData();
+    
+    // Append basic fields
+    formData.append('slug', form.value.slug);
+    formData.append('active', form.value.active);
+    formData.append('featured', form.value.featured);
+    
+    // Append translations
+    Object.entries(form.value.translations).forEach(([locale, translation]) => {
+      formData.append(`translations[${locale}][name]`, translation.name);
+      formData.append(`translations[${locale}][description]`, translation.description);
+    });
 
-        // Append image if exists
-        if (imageFile.value) {
-          formData.append('image', imageFile.value)
-        }
-
-        if (isEdit.value) {
-          await store.dispatch('categories/updateCategory', {
-            id: route.params.id,
-            categoryData: formData
-          })
-        } else {
-          await store.dispatch('categories/createCategory', formData)
-        }
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Success',
-          text: `Category ${isEdit.value ? 'updated' : 'created'} successfully`
-        })
-
-        router.push('/categories')
-      } catch (error) {
-        if (error.response?.status === 422) {
-          errors.value = error.response.data.errors
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: `Failed to ${isEdit.value ? 'update' : 'create'} category`
-          })
-        }
-      } finally {
-        loading.value = false
-      }
+    // Append image if exists
+    if (imageFile.value) {
+      formData.append('image', imageFile.value);
     }
 
-    // Lifecycle hooks
+    const url = isEdit.value 
+      ? `${import.meta.env.VITE_API_URL}/admin/categories/${route.params.id}`
+      : `${import.meta.env.VITE_API_URL}/admin/categories`;
+
+    const method = isEdit.value ? 'put' : 'post';
+
+    const response = await axios[method](url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    // Update form state with response data
+    form.value = {
+      ...form.value,
+      ...response.data.data
+    };
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: response.data.message
+    });
+
+    router.push('/categories');
+  } catch (error) {
+    console.log(error); // Xatolikni konsolga chiqarish
+    if (error.response?.status === 422) {
+      errors.value = error.response.data.errors;
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Failed to ${isEdit.value ? 'update' : 'create'} category`
+      });
+    }
+  } finally {
+    loading.value = false;
+  }
+};
+
     onMounted(() => {
-      loadCategories()
       loadCategory()
     })
 
@@ -281,7 +287,6 @@ export default {
       isEdit,
       imagePreview,
       imageName,
-      availableParentCategories,
       handleImageChange,
       handleSubmit
     }
@@ -293,9 +298,9 @@ export default {
 .custom-file-input:lang(en)~.custom-file-label::after {
   content: "Browse";
 }
-
-.img-thumbnail {
-  max-height: 200px;
-  object-fit: contain;
+.img-preview {
+  max-width: 100%;
+  height: auto;
+  margin-top: 1rem;
 }
 </style>

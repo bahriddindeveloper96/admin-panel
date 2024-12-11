@@ -15,6 +15,7 @@ import ProductsList from '../views/products/ProductsList.vue'
 import ProductForm from '../views/products/ProductForm.vue'
 import Reports from '../views/reports/Reports.vue'
 import CategoriesList from '../views/categories/CategoriesList.vue'
+import CategoryForm from '../views/categories/CategoryForm.vue'
 import Settings from '../views/settings/Settings.vue'
 
 const routes = [
@@ -65,6 +66,16 @@ const routes = [
         component: CategoriesList
       },
       {
+        path: 'categories/create',
+        name: 'category-create',
+        component: CategoryForm
+      },
+      {
+        path: 'categories/:id/edit',
+        name: 'category-edit',
+        component: CategoryForm
+      },
+      {
         path: 'reports',
         name: 'reports',
         component: Reports
@@ -107,16 +118,15 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard
 router.beforeEach((to, from, next) => {
+  const isAuthenticated = store.getters.isAuthenticated
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const isGuest = to.matched.some(record => record.meta.guest)
-  const isAuthenticated = store.getters.isAuthenticated
 
   if (requiresAuth && !isAuthenticated) {
     next('/auth/login')
   } else if (isGuest && isAuthenticated) {
-    next('/dashboard')
+    next('/')
   } else {
     next()
   }
