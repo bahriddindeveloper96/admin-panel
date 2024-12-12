@@ -178,6 +178,16 @@ export default {
       const file = event.target.files[0]
       if (!file) return
 
+      // Faqat rasm fayllarini qabul qilish
+      if (!file.type.startsWith('image/')) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Please select an image file'
+        })
+        return
+      }
+
       imageFile.value = file
       imagePreview.value = URL.createObjectURL(file)
     }
@@ -213,68 +223,70 @@ export default {
     }
 
     const handleSubmit = async () => {
-  try {
-    loading.value = true;
-    errors.value = {};
+      try {
+        loading.value = true;
+        errors.value = {};
 
-    const formData = new FormData();
-    
-    // Append basic fields
-    formData.append('slug', form.value.slug);
-    formData.append('active', form.value.active);
-    formData.append('featured', form.value.featured);
-    
-    // Append translations
-    Object.entries(form.value.translations).forEach(([locale, translation]) => {
-      formData.append(`translations[${locale}][name]`, translation.name);
-      formData.append(`translations[${locale}][description]`, translation.description);
-    });
+        const formData = new FormData();
+        
+        // Append basic fields
+        formData.append('slug', form.value.slug);
+        formData.append('active', form.value.active ? 1 : 0);
+        formData.append('featured', form.value.featured ? 1 : 0);
+        
+        // Append translations
+        Object.entries(form.value.translations).forEach(([locale, translation]) => {
+          formData.append(`translations[${locale}][name]`, translation.name);
+          formData.append(`translations[${locale}][description]`, translation.description);
+        });
 
-    // Append image if exists
-    if (imageFile.value) {
-      formData.append('image', imageFile.value);
-    }
+        // Append image if exists
+        if (imageFile.value) {
+          formData.append('image', imageFile.value);
+        }
 
-    const url = isEdit.value 
-      ? `${import.meta.env.VITE_API_URL}/admin/categories/${route.params.id}`
-      : `${import.meta.env.VITE_API_URL}/admin/categories`;
+        const url = isEdit.value 
+          ? `/admin/categories/${route.params.id}`
+          : `/admin/categories`;
 
-    const method = isEdit.value ? 'put' : 'post';
+        const method = isEdit.value ? 'put' : 'post';
 
-    const response = await axios[method](url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+        const response = await axios[method](url, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Accept': 'application/json'
+          }
+        });
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: response.data.message
+        });
+
+        router.push('/categories');
+      } catch (error) {
+        console.log('Error:', error.response?.data); // Xatolikni to'liqroq ko'rish
+        if (error.response?.status === 422) {
+          errors.value = error.response.data.errors;
+          // Validation xatoliklarini ko'rsatish
+          const errorMessages = Object.values(error.response.data.errors).flat();
+          Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: errorMessages[0]
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: `Failed to ${isEdit.value ? 'update' : 'create'} category`
+          });
+        }
+      } finally {
+        loading.value = false;
       }
-    });
-
-    // Update form state with response data
-    form.value = {
-      ...form.value,
-      ...response.data.data
     };
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Success',
-      text: response.data.message
-    });
-
-    router.push('/categories');
-  } catch (error) {
-    console.log(error); // Xatolikni konsolga chiqarish
-    if (error.response?.status === 422) {
-      errors.value = error.response.data.errors;
-    } else {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: `Failed to ${isEdit.value ? 'update' : 'create'} category`
-      });
-    }
-  } finally {
-    loading.value = false;
-  }
-};
 
     onMounted(() => {
       loadCategory()
