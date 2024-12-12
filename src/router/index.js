@@ -13,6 +13,7 @@ import OrdersList from '../views/orders/OrdersList.vue'
 import OrderDetails from '../views/orders/OrderDetails.vue'
 import ProductsList from '../views/products/ProductsList.vue'
 import ProductForm from '../views/products/ProductForm.vue'
+import ProductEdit from '../views/products/ProductEdit.vue'
 import Reports from '../views/reports/Reports.vue'
 import CategoriesList from '../views/categories/CategoriesList.vue'
 import CategoryForm from '../views/categories/CategoryForm.vue'
@@ -58,7 +59,7 @@ const routes = [
       {
         path: 'products/:id/edit',
         name: 'product-edit',
-        component: ProductForm
+        component: ProductEdit
       },
       {
         path: 'categories',

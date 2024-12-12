@@ -14,8 +14,9 @@ import 'admin-lte/dist/js/adminlte.min.js'
 import '@fortawesome/fontawesome-free/css/all.min.css'
 
 // Set axios defaults
-axios.defaults.baseURL = 'http://localhost:8000'
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 axios.defaults.withCredentials = true
+axios.defaults.headers.common['Accept'] = 'application/json'
 
 // Add request interceptor
 axios.interceptors.request.use(config => {

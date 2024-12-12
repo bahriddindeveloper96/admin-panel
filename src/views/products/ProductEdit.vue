@@ -293,7 +293,7 @@
                         <div class="form-group">
                           <label>RAM</label>
                           <input
-                            v-model="variant.attribute_values.RAM"
+                            v-model="variant.RAM"
                             type="text"
                             class="form-control"
                             placeholder="e.g. 8GB"
@@ -304,7 +304,7 @@
                         <div class="form-group">
                           <label>Storage</label>
                           <input
-                            v-model="variant.attribute_values.Storage"
+                            v-model="variant.Storage"
                             type="text"
                             class="form-control"
                             placeholder="e.g. 128GB"
@@ -315,7 +315,7 @@
                         <div class="form-group">
                           <label>Color</label>
                           <input
-                            v-model="variant.attribute_values.Color"
+                            v-model="variant.Color"
                             type="text"
                             class="form-control"
                             placeholder="e.g. Black"
@@ -406,31 +406,40 @@
 </template>
 
 <script>
-import { ref, reactive } from "vue";
-import { useRouter } from "vue-router";
+import { ref, reactive, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import Swal from "sweetalert2";
 
 export default {
-  name: "ProductForm",
+  name: "ProductEdit",
 
   setup() {
     const router = useRouter();
+    const route = useRoute();
     const currentLang = ref("en");
+    const isLoading = ref(false);
+    const categories = ref([]);
 
-    // Initialize form with predefined structure
+    // Form strukturasi
     const form = reactive({
+      id: '',
       category_id: "",
-      user_id: 1, // Default user_id
+      translations: {
+        en: { name: "", description: "" },
+        ru: { name: "", description: "" },
+        uz: { name: "", description: "" },
+      },
       slug: "",
       active: true,
       featured: false,
-      images: [],
       attributes: {
         Brand: "",
         "Display Size": "",
         "Display Resolution": "",
         Processor: "",
+        RAM: "",
+        Storage: "",
         "Main Camera": "",
         "Front Camera": "",
         "Battery Capacity": "",
@@ -440,151 +449,284 @@ export default {
         "Wireless Charging": false,
         "Water Resistance": "",
       },
-      translations: {
-        en: { name: "", description: "" },
-        ru: { name: "", description: "" },
-        uz: { name: "", description: "" },
-      },
       variants: [],
     });
 
-    const categories = ref([]);
-
+    // Kategoriyalarni yuklash
     const fetchCategories = async () => {
       try {
         const response = await axios.get("/admin/categories");
         categories.value = response.data;
       } catch (error) {
         console.error("Error fetching categories:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: "Failed to load categories",
+        });
       }
     };
 
-    const handleImageUpload = async (event, variantIndex = null) => {
-      const files = event.target.files;
-      const formData = new FormData();
+    // Mahsulot ma'lumotlarini yuklash
+    const loadProduct = async () => {
+      try {
+        isLoading.value = true;
+        const productId = route.params.id;
+        
+        if (!productId) {
+          Swal.fire({
+            icon: "error",
+            title: "Error!",
+            text: "Product ID not found",
+          });
+          router.push("/admin/products");
+          return;
+        }
 
-      Array.from(files).forEach((file) => {
+        const response = await axios.get(`/admin/products/${productId}`);
+        const product = response.data;
+
+        if (product) {
+          // Asosiy ma'lumotlarni yuklash
+          form.id = product.id;
+          form.category_id = product.category_id?.toString() || "";
+          form.slug = product.slug || "";
+          form.active = Boolean(product.active);
+          form.featured = Boolean(product.featured);
+
+          // Tarjimalarni yuklash
+          if (product.translations) {
+            form.translations = {
+              en: {
+                name: product.translations.en?.name || "",
+                description: product.translations.en?.description || "",
+              },
+              ru: {
+                name: product.translations.ru?.name || "",
+                description: product.translations.ru?.description || "",
+              },
+              uz: {
+                name: product.translations.uz?.name || "",
+                description: product.translations.uz?.description || "",
+              },
+            };
+          }
+
+          // Atributlarni yuklash
+          if (product.attributes) {
+            form.attributes = {
+              Brand: product.attributes.Brand || "",
+              "Display Size": product.attributes["Display Size"] || "",
+              "Display Resolution": product.attributes["Display Resolution"] || "",
+              Processor: product.attributes.Processor || "",
+              RAM: product.attributes.RAM || "",
+              Storage: product.attributes.Storage || "",
+              "Main Camera": product.attributes["Main Camera"] || "",
+              "Front Camera": product.attributes["Front Camera"] || "",
+              "Battery Capacity": product.attributes["Battery Capacity"] || "",
+              "Fast Charging": Boolean(product.attributes["Fast Charging"]),
+              "5G Support": Boolean(product.attributes["5G Support"]),
+              NFC: Boolean(product.attributes.NFC),
+              "Wireless Charging": Boolean(product.attributes["Wireless Charging"]),
+              "Water Resistance": product.attributes["Water Resistance"] || "",
+            };
+          }
+
+          // Variantlarni yuklash
+          if (Array.isArray(product.variants)) {
+            form.variants = product.variants.map(variant => ({
+              id: variant.id,
+              RAM: variant.RAM || "",
+              Storage: variant.Storage || "",
+              Color: variant.Color || "",
+              price: parseFloat(variant.price) || 0,
+              stock: parseInt(variant.stock) || 0,
+              images: variant.images || []
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error loading product:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: error.response?.data?.message || "Failed to load product",
+        });
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    // Rasm yuklash
+    const handleImageUpload = async (event, variantIndex) => {
+      const files = event.target.files;
+      if (!files.length) return;
+
+      const formData = new FormData();
+      Array.from(files).forEach(file => {
         formData.append("images[]", file);
       });
 
       try {
-        const response = await axios.post(
-          "/admin/products/upload-images",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
+        const response = await axios.post("/admin/products/upload-images", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
 
-        const relativePaths = response.data.paths;
-        const baseURL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+        const imagePaths = response.data.paths;
 
-        const imagePaths = relativePaths.map((path) =>
-          path.startsWith("http") ? path : `${baseURL}${path}`
-        );
-
-        if (variantIndex !== null) {
+        // Variantga rasmlarni qo'shish
+        if (variantIndex !== null && variantIndex >= 0) {
           if (!form.variants[variantIndex].images) {
             form.variants[variantIndex].images = [];
           }
           form.variants[variantIndex].images.push(...imagePaths);
-        } else {
-          form.images.push(...imagePaths);
         }
       } catch (error) {
         console.error("Error uploading images:", error);
         Swal.fire({
           icon: "error",
           title: "Error!",
-          text: error.response?.data?.message || "Failed to upload images.",
+          text: "Failed to upload images",
         });
       }
     };
 
+    // Rasmni o'chirish
     const removeImage = (variantIndex, imageIndex) => {
       form.variants[variantIndex].images.splice(imageIndex, 1);
     };
 
+    // Variant qo'shish
     const addVariant = () => {
       form.variants.push({
-        attribute_values: {
-          RAM: "",
-          Storage: "",
-          Color: "",
-        },
+        RAM: "",
+        Storage: "",
+        Color: "",
         price: 0,
         stock: 0,
-        images: [], // Initialize images for the new variant
+        images: []
       });
     };
 
+    // Variantni o'chirish
     const removeVariant = (index) => {
       form.variants.splice(index, 1);
     };
 
+    // Mahsulotni yangilash
     const handleSubmit = async () => {
       try {
-        // Validate if at least one variant exists
-        if (form.variants.length === 0) {
-          form.variants.push({
-            attribute_values: {
-              RAM: "",
-              Storage: "",
-              Color: "",
-            },
-            price: 0,
-            stock: 0,
-            images: [], // Initialize images for the new variant
+        isLoading.value = true;
+
+        // Ma'lumotlarni tayyorlash
+        const formData = new FormData();
+        formData.append('_method', 'PUT');
+        formData.append('id', form.id);
+        formData.append('category_id', form.category_id);
+        formData.append('slug', form.slug);
+        formData.append('active', form.active ? 1 : 0);
+        formData.append('featured', form.featured ? 1 : 0);
+        formData.append('translations', JSON.stringify(form.translations));
+        formData.append('attributes', JSON.stringify(form.attributes));
+
+        // Variantlarni qo'shish
+        const variantsData = form.variants.map(variant => ({
+          id: variant.id,
+          RAM: variant.RAM,
+          Storage: variant.Storage,
+          Color: variant.Color,
+          price: parseFloat(variant.price) || 0,
+          stock: parseInt(variant.stock) || 0,
+          images: variant.images
+        }));
+        formData.append('variants', JSON.stringify(variantsData));
+
+        // API ga so'rov yuborish
+        const response = await axios.post(`/admin/products/${form.id}`, formData);
+
+        if (response.data.success) {
+          Swal.fire({
+            icon: "success",
+            title: "Success!",
+            text: "Product has been updated successfully",
           });
+          router.push("/admin/products");
         }
-
-        // Ensure all variants have price and stock
-        form.variants.forEach((variant) => {
-          if (!variant.price) variant.price = 0;
-          if (!variant.stock) variant.stock = 0;
-        });
-
-        const response = await axios.post("/admin/products", form);
-
-        Swal.fire({
-          icon: "success",
-          title: "Success!",
-          text: "Product has been created successfully.",
-        });
-
-        router.push("/admin/products");
       } catch (error) {
-        console.error("Error creating product:", error);
+        console.error("Error updating product:", error);
         Swal.fire({
           icon: "error",
           title: "Error!",
-          text: error.response?.data?.message || "Something went wrong!",
+          text: error.response?.data?.message || "Failed to update product",
         });
+      } finally {
+        isLoading.value = false;
       }
     };
 
-    fetchCategories();
+    // Komponent yuklanganda
+    onMounted(() => {
+      fetchCategories();
+      loadProduct();
+    });
 
     return {
       form,
       categories,
       currentLang,
+      isLoading,
       handleImageUpload,
       removeImage,
       addVariant,
       removeVariant,
-      handleSubmit,
+      handleSubmit
     };
   },
 };
 </script>
 
 <style scoped>
-.card-tools {
+.card {
+  margin-bottom: 1rem;
+}
+
+.variant-card {
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.image-preview {
+  position: relative;
+  display: inline-block;
+  margin: 0.5rem;
+}
+
+.image-preview img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
+.remove-image {
   position: absolute;
-  right: 1rem;
-  top: 0.5rem;
+  top: 5px;
+  right: 5px;
+  background: rgba(255, 0, 0, 0.7);
+  border: none;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.btn-danger {
+  margin-top: 1rem;
 }
 </style>

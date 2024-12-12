@@ -21,17 +21,16 @@ const getters = {
 }
 
 const actions = {
-  // Fetch products list with pagination and filters
+  // Fetch products list
   async fetchProducts({ commit }, params = {}) {
     try {
       commit('SET_LOADING', true)
       const response = await axios.get('/admin/products', { params })
-      const products = response.data?.products || {
-        data: [],
-        total: 0,
+      const products = {
+        data: response.data?.products || [],
+        total: response.data?.products?.length || 0,
         per_page: 10,
-        current_page: 1,
-        links: []
+        current_page: params.page || 1
       }
       commit('SET_PRODUCTS', products)
       return products
@@ -98,7 +97,8 @@ const actions = {
   async deleteProduct({ commit }, id) {
     try {
       commit('SET_LOADING', true)
-      await axios.delete(`/admin/products/${id}`)
+      const response = await axios.delete(`/admin/products/${id}`)
+      return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to delete product')
       throw error
@@ -107,11 +107,12 @@ const actions = {
     }
   },
 
-  // Bulk delete products
+  // Delete multiple products
   async deleteProducts({ commit }, ids) {
     try {
       commit('SET_LOADING', true)
-      await axios.post('/admin/products/bulk-delete', { ids })
+      const response = await axios.post('/admin/products/delete', { ids })
+      return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to delete products')
       throw error
@@ -121,23 +122,23 @@ const actions = {
   },
 
   // Export products
-  async exportProducts({ commit }, filters = {}) {
+  async exportProducts({ commit }, params = {}) {
     try {
       commit('SET_LOADING', true)
       const response = await axios.get('/admin/products/export', {
-        params: filters,
+        params,
         responseType: 'blob'
       })
       
-      // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
-      link.setAttribute('download', 'products.csv')
+      link.setAttribute('download', 'products.xlsx')
       document.body.appendChild(link)
       link.click()
-      document.body.removeChild(link)
+      link.remove()
       
+      return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to export products')
       throw error

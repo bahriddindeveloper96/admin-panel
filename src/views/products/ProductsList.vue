@@ -114,38 +114,33 @@
                     </td>
                     <td>
                       <div class="variants-container">
-                        <div
-                          v-for="variant in product.variants.slice(0, 1)"
-                          :key="variant.id"
-                          class="variant-images"
-                        >
-                          <vue-carousel
-                            :autoplay="true"
-                            :loop="true"
-                            class="product-slider"
-                          >
+                        <div class="variant-images">
+                          <div class="image-container">
                             <img
-                              v-for="(image, index) in variant.images"
-                              :key="index"
-                              :src="`${base_url}/${image}`"
-                              :alt="`${product.name} - Image ${index + 1}`"
+                              v-if="product.images && product.images.length > 0"
+                              :src="product.images[currentImageIndex[product.id]]?.image"
+                              :alt="product.name"
                               class="slider-image"
                               @error="handleImageError"
                             />
-                          </vue-carousel>
+                            <div class="image-controls">
+                              <button class="nav-btn prev" @click="prevImage(product.id)">
+                                <i class="fas fa-chevron-left"></i>
+                              </button>
+                              <button class="nav-btn next" @click="nextImage(product.id)">
+                                <i class="fas fa-chevron-right"></i>
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td>
                       <div class="fw-medium">{{ product.name }}</div>
-                      <small class="text-muted"
-                        >{{ $t("common.id") }}: {{ product.id }}</small
-                      >
+                      <small class="text-muted">{{ $t("common.id") }}: {{ product.id }}</small>
                     </td>
                     <td>
-                      <span class="category-badge">{{
-                        product.category?.name || $t("products.uncategorized")
-                      }}</span>
+                      <span class="category-badge">{{ product.category?.name || $t("products.uncategorized") }}</span>
                     </td>
                     <td>
                       <div class="price-badge">
@@ -178,13 +173,12 @@
                     </td>
                     <td>
                       <div class="d-flex justify-content-center gap-2">
-                        <router-link
-                          :to="`/products/${product.id}/edit`"
-                          class="btn btn-sm btn-info"
-                          :title="$t('common.edit')"
+                        <button
+                          class="btn btn-info btn-sm mr-2"
+                          @click="editProduct(product)"
                         >
                           <i class="fas fa-edit"></i>
-                        </router-link>
+                        </button>
                         <button
                           class="btn btn-sm btn-danger"
                           @click="deleteProduct(product.id)"
@@ -220,16 +214,17 @@
 <script>
 import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
+import { useRouter } from 'vue-router';
 import Swal from "sweetalert2";
-import VueCarousel from "@chenfengyuan/vue-carousel";
 import Pagination from "@/components/Pagination.vue";
 
 export default {
   name: "ProductsList",
-  components: { Pagination, VueCarousel },
+  components: { Pagination },
 
   setup() {
     const store = useStore();
+    const router = useRouter();
     const base_url = import.meta.env.VITE_API_URL || '';
     const selectedProducts = ref([]);
     const filters = ref({
@@ -238,6 +233,9 @@ export default {
       status: "",
       page: 1,
     });
+
+    const currentImageIndex = ref({});
+    const imageIntervals = ref({});
 
     // Methods
     const loadProducts = async () => {
@@ -337,7 +335,41 @@ export default {
     };
 
     const handleImageError = (e) => {
-      e.target.src = '/placeholder-image.jpg';
+      e.target.src = "/placeholder-image.jpg";
+    };
+
+    const startImageSlider = (productId) => {
+      if (imageIntervals.value[productId]) {
+        clearInterval(imageIntervals.value[productId]);
+      }
+      
+      if (currentImageIndex.value[productId] === undefined) {
+        currentImageIndex.value[productId] = 0;
+      }
+
+      imageIntervals.value[productId] = setInterval(() => {
+        nextImage(productId);
+      }, 3000);
+    };
+
+    const nextImage = (productId) => {
+      const product = products.value.data.find(p => p.id === productId);
+      if (!product || !product.images.length) return;
+
+      currentImageIndex.value[productId] = (currentImageIndex.value[productId] + 1) % product.images.length;
+    };
+
+    const prevImage = (productId) => {
+      const product = products.value.data.find(p => p.id === productId);
+      if (!product || !product.images.length) return;
+
+      currentImageIndex.value[productId] = currentImageIndex.value[productId] === 0 
+        ? product.images.length - 1 
+        : currentImageIndex.value[productId] - 1;
+    };
+
+    const editProduct = (product) => {
+      router.push(`/products/${product.id}/edit`);
     };
 
     // Computed
@@ -374,16 +406,19 @@ export default {
 
     // Formatting functions
     const formatCurrency = (value) => {
-      return new Intl.NumberFormat("uz-UZ", {
-        style: "currency",
-        currency: "UZS",
+      return new Intl.NumberFormat('uz-UZ', {
+        style: 'currency',
+        currency: 'UZS'
       }).format(value);
     };
 
     const formatPriceRange = (variants) => {
-      const prices = variants.map((variant) => variant.price);
+      const prices = variants.map(variant => parseFloat(variant.price));
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
+      if (minPrice === maxPrice) {
+        return formatCurrency(minPrice);
+      }
       return `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`;
     };
 
@@ -397,7 +432,14 @@ export default {
 
     // Lifecycle
     onMounted(() => {
-      loadProducts();
+      loadProducts().then(() => {
+        products.value.data.forEach(product => {
+          if (product.images && product.images.length > 0) {
+            currentImageIndex.value[product.id] = 0;
+            startImageSlider(product.id);
+          }
+        });
+      });
     });
 
     return {
@@ -418,6 +460,10 @@ export default {
       getTotalStock,
       getStatusBadgeClass,
       handleImageError,
+      currentImageIndex,
+      nextImage,
+      prevImage,
+      editProduct,
     };
   },
 };
@@ -431,260 +477,71 @@ export default {
   position: relative;
 }
 
-.slider-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-  transition: transform 0.2s;
-}
-
-.slider-image:hover {
-  transform: scale(1.05);
-}
-
-.card {
-  border: none;
-  border-radius: 15px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-}
-
-.card-header {
-  background: white;
-  border-bottom: 1px solid #f0f0f0;
-  border-radius: 15px 15px 0 0 !important;
-  padding: 1.5rem;
-}
-
-.card-body {
-  padding: 0;
-}
-
-.table {
-  margin-bottom: 0;
-}
-
-.table th {
-  border-top: none;
-  font-weight: 600;
-  color: #555;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  padding: 1.2rem 1rem;
-  background: #f8f9fa;
-}
-
-.table td {
-  padding: 1rem;
-  vertical-align: middle;
-  border-top: 1px solid #f0f0f0;
-}
-
-.table tbody tr {
-  transition: all 0.2s;
-}
-
-.table tbody tr:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.product-image {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
-}
-
-.product-image:hover {
-  transform: scale(1.1);
-}
-
-.badge {
-  font-size: 0.75rem;
-  padding: 0.5em 0.8em;
-  border-radius: 50px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-}
-
-.badge-success {
-  background-color: #28a745;
-  color: white;
-}
-
-.badge-danger {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btn {
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.btn-sm {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.875rem;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.btn-info {
-  background-color: #17a2b8;
-  border-color: #17a2b8;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
-}
-
-.form-control {
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  padding: 0.6rem 1rem;
-  transition: all 0.2s;
-}
-
-.form-control:focus {
-  border-color: #80bdff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
-}
-
-.search-box {
-  position: relative;
-}
-
-.search-box .form-control {
-  padding-left: 2.5rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #999;
-}
-
-.card-footer {
-  background: white;
-  border-top: 1px solid #f0f0f0;
-  padding: 1rem 1.5rem;
-  border-radius: 0 0 15px 15px !important;
-}
-
-/* Loading spinner */
-.spinner-border {
-  width: 2rem;
-  height: 2rem;
-  color: #007bff;
-}
-
-/* Empty state */
-.empty-state {
-  padding: 3rem 1rem;
-  text-align: center;
-  color: #666;
-}
-
-.empty-state i {
-  font-size: 3rem;
-  color: #ddd;
-  margin-bottom: 1rem;
-}
-
-/* Checkbox styling */
-.custom-checkbox {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 2px solid #ddd;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.custom-checkbox:checked {
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-/* Price and stock badges */
-.price-badge {
-  background: #e8f5e9;
-  color: #2e7d32;
-  padding: 0.4rem 0.8rem;
-  border-radius: 50px;
-  font-weight: 500;
-}
-
-.stock-badge {
-  background: #fff3e0;
-  color: #ef6c00;
-  padding: 0.4rem 0.8rem;
-  border-radius: 50px;
-  font-weight: 500;
-}
-
-.category-badge {
-  background: #e2e3e5;
-  color: #6c757d;
-  padding: 0.4rem 0.8rem;
-  border-radius: 50px;
-  font-weight: 500;
-}
-
 .variants-container {
-  max-width: 200px;
+  width: 150px;
   margin: 0 auto;
 }
 
 .variant-images {
-  margin-bottom: 10px;
+  width: 100%;
+  position: relative;
 }
 
-.product-slider {
-  width: 100%;
+.image-container {
+  position: relative;
+  width: 150px;
   height: 150px;
-  border-radius: 8px;
   overflow: hidden;
 }
 
 .slider-image {
   width: 100%;
-  height: 150px;
+  height: 100%;
   object-fit: cover;
   border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
-.VueCarousel-navigation-button {
-  background: rgba(0, 0, 0, 0.5) !important;
+.image-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  padding: 0 5px;
+}
+
+.image-container:hover .image-controls {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.nav-btn {
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  color: white !important;
-  padding: 5px !important;
-  margin: 0 5px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
 }
 
-.VueCarousel-pagination {
-  margin-top: 5px !important;
+.nav-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
 }
 
-.VueCarousel-dot {
-  margin: 0 3px !important;
+.nav-btn i {
+  font-size: 12px;
 }
+
+/* ... other styles ... */
 </style>
