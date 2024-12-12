@@ -60,7 +60,7 @@
                     <div class="invalid-feedback">{{ errors[`translations.${locale}.description`] }}</div>
                   </div>
                 </div>
-
+                
                 <div class="col-md-4">
                   <!-- Settings -->
                   <div class="form-group">
@@ -92,7 +92,29 @@
                       </label>
                     </div>
                   </div>
-
+                  <!-- Parent Category -->
+                <!-- Parent Category -->
+                <div class="form-group">
+                  <label>Parent Category</label>
+                  <select 
+                    v-model="form.parent_id" 
+                    class="form-control"
+                    @change="console.log('Selected parent:', form.parent_id)"
+                  >
+                    <option value="">Select Parent Category</option>
+                    <option
+                      v-for="category in categories"
+                      :key="category.id"
+                      :value="category.id"
+                      :disabled="isEdit && category.id === parseInt(route.params.id)"
+                    >
+                      {{ category.translations?.en?.name || category.name || `Category ${category.id}` }}
+                    </option>
+                  </select>
+                  <div v-if="categories.length === 0" class="text-muted mt-1">
+                    Loading categories...
+                  </div>
+                </div>
                   <!-- Image Upload -->
                   <div class="form-group">
                     <label>Category Image</label>
@@ -138,7 +160,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watchEffect } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
@@ -163,10 +185,52 @@ export default {
       slug: '',
       active: true,
       featured: false,
+      parent_id: '', // Make sure parent_id is initialized
       translations: {
         en: { name: '', description: '' },
         ru: { name: '', description: '' },
         uz: { name: '', description: '' }
+      }
+    })
+
+    const categories = ref([])
+
+    const fetchCategories = async () => {
+      try {
+        console.log('Fetching categories...')
+        const response = await axios.get("/admin/categories")
+        console.log('Raw response:', response)
+        console.log('Response data:', response.data)
+        
+        // API response strukturasiga qarab ma'lumotlarni olish
+        let fetchedCategories = []
+        if (response.data.data) {
+          fetchedCategories = response.data.data
+        } else if (Array.isArray(response.data)) {
+          fetchedCategories = response.data
+        }
+        
+        console.log('Processed categories:', fetchedCategories)
+        categories.value = fetchedCategories.filter(cat => 
+          cat && cat.id && (!isEdit.value || cat.id !== parseInt(route.params.id))
+        )
+        console.log('Final categories state:', categories.value)
+      } catch (error) {
+        console.error("Error fetching categories:", error)
+        if (error.response) {
+          console.error("Error response:", error.response.data)
+        }
+      }
+    }
+
+    watchEffect(() => {
+      console.log('Current categories:', categories.value)
+    })
+
+    onMounted(async () => {
+      await fetchCategories()
+      if (isEdit.value) {
+        await loadCategory()
       }
     })
 
@@ -197,13 +261,14 @@ export default {
 
       try {
         loading.value = true
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/admin/categories/${route.params.id}`)
+        const response = await axios.get(`/admin/categories/${route.params.id}`)
         const category = response.data.data
 
         form.value = {
           slug: category.slug,
           active: category.active,
           featured: category.featured,
+          parent_id: category.parent_id, // Update parent_id
           translations: category.translations
         }
 
@@ -227,49 +292,94 @@ export default {
         loading.value = true;
         errors.value = {};
 
-        const formData = new FormData();
-        
-        // Append basic fields
-        formData.append('slug', form.value.slug);
-        formData.append('active', form.value.active ? 1 : 0);
-        formData.append('featured', form.value.featured ? 1 : 0);
-        
-        // Append translations
-        Object.entries(form.value.translations).forEach(([locale, translation]) => {
-          formData.append(`translations[${locale}][name]`, translation.name);
-          formData.append(`translations[${locale}][description]`, translation.description);
+        // Format translations data
+        const translations = {};
+        Object.entries(form.value.translations).forEach(([locale, data]) => {
+          translations[locale] = {
+            name: data.name || '',
+            description: data.description || ''
+          };
         });
 
-        // Append image if exists
-        if (imageFile.value) {
-          formData.append('image', imageFile.value);
+        // Create request data
+        const requestData = {
+          slug: form.value.slug,
+          active: form.value.active ? 1 : 0,
+          featured: form.value.featured ? 1 : 0,
+          translations: translations
+        };
+
+        // Only add parent_id if it has a value
+        if (form.value.parent_id) {
+          requestData.parent_id = parseInt(form.value.parent_id);
         }
+
+        console.log('Request data:', requestData);
 
         const url = isEdit.value 
           ? `/admin/categories/${route.params.id}`
           : `/admin/categories`;
 
-        const method = isEdit.value ? 'put' : 'post';
+        let response;
+        
+        // If we have an image, use FormData
+        if (imageFile.value) {
+          const formData = new FormData();
+          
+          // Append each field separately
+          formData.append('slug', requestData.slug);
+          formData.append('active', requestData.active);
+          formData.append('featured', requestData.featured);
+          
+          // Append translations
+          Object.entries(translations).forEach(([locale, data]) => {
+            formData.append(`translations[${locale}][name]`, data.name);
+            formData.append(`translations[${locale}][description]`, data.description);
+          });
 
-        const response = await axios[method](url, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json'
+          // Append parent_id if exists
+          if (requestData.parent_id) {
+            formData.append('parent_id', requestData.parent_id);
           }
-        });
+          
+          // Append image
+          formData.append('image', imageFile.value);
+
+          response = await axios[isEdit.value ? 'put' : 'post'](url, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'Accept': 'application/json'
+            }
+          });
+        } else {
+          // If no image, send JSON directly
+          response = await axios[isEdit.value ? 'put' : 'post'](url, requestData, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          });
+        }
+
+        console.log('Response:', response.data);
 
         Swal.fire({
           icon: 'success',
           title: 'Success',
-          text: response.data.message
+          text: 'Category has been saved successfully'
         });
 
         router.push('/categories');
       } catch (error) {
-        console.log('Error:', error.response?.data); // Xatolikni to'liqroq ko'rish
+        console.error('Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          requestData: error.config?.data
+        });
+        
         if (error.response?.status === 422) {
           errors.value = error.response.data.errors;
-          // Validation xatoliklarini ko'rsatish
           const errorMessages = Object.values(error.response.data.errors).flat();
           Swal.fire({
             icon: 'error',
@@ -280,7 +390,7 @@ export default {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: `Failed to ${isEdit.value ? 'update' : 'create'} category`
+            text: error.response?.data?.message || 'Failed to save category'
           });
         }
       } finally {
@@ -288,15 +398,12 @@ export default {
       }
     };
 
-    onMounted(() => {
-      loadCategory()
-    })
-
     return {
       form,
       loading,
       errors,
       isEdit,
+      categories, 
       imagePreview,
       imageName,
       handleImageChange,
