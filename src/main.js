@@ -6,6 +6,10 @@ import i18n from './i18n'
 import axios from 'axios'
 import { watch } from 'vue'
 
+// Element Plus
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+
 // Bootstrap va AdminLTE
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
@@ -49,6 +53,7 @@ const app = createApp(App)
 app.use(router)
 app.use(store)
 app.use(i18n)
+app.use(ElementPlus)
 
 // Watch for language changes
 watch(
