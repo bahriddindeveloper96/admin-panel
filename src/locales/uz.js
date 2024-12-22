@@ -21,6 +21,10 @@ export default {
   common: {
     search: 'Qidirish',
     add: 'Qo\'shish',
+    active: 'Faol',
+    inactive: 'Nofaol',
+    featured: 'Tavsiya etilgan',
+    notFeatured: 'Tavsiya etilmagan',
     edit: 'Tahrirlash',
     delete: 'O\'chirish',
     delete_selected: 'Tanlanganlarni o\'chirish',
@@ -40,7 +44,16 @@ export default {
     order_id: 'Buyurtma raqami',
     products: 'Mahsulotlar',
     loading: 'Yuklanmoqda...',
-    id: 'ID'
+    id: 'ID',
+    name: 'Nomi',
+    description: 'Tavsif',
+    type: 'Turi',
+    required: 'Majburiy',
+    filterable: 'Filtrlash mumkin',
+    yes: 'Ha',
+    no: 'Yo\'q',
+    order: 'Tartib',
+    slug: 'URL manzil'
   },
   products: {
     title: 'Mahsulotlar',
@@ -113,6 +126,7 @@ export default {
     search_placeholder: 'Kategoriyalarni qidirish...',
     no_categories: 'Kategoriyalar topilmadi',
     root_category: 'Asosiy kategoriya',
+    subcategories: 'Ichki kategoriyalar',
     table: {
       image: 'Rasm',
       name: 'Nomi',
@@ -276,50 +290,6 @@ export default {
       }
     }
   },
-  // order_details: {
-  //   order_info: {
-  //     title: 'Buyurtma ma\'lumotlari',
-  //     order_id: 'Buyurtma ID',
-  //     status: 'Holat',
-  //     update_status: 'Holatni yangilash',
-  //     date: 'Sana',
-  //     total_amount: 'Umumiy summa',
-  //     tracking_number: 'Kuzatish raqami',
-  //     notes: 'Izohlar'
-  //   },
-  //   customer_info: {
-  //     title: 'Mijoz ma\'lumotlari',
-  //     name: 'Ism',
-  //     email: 'Email',
-  //     phone: 'Telefon'
-  //   },
-  //   order_items: {
-  //     title: 'Buyurtma mahsulotlari',
-  //     product: 'Mahsulot',
-  //     sku: 'Artikul',
-  //     price: 'Narx',
-  //     quantity: 'Soni',
-  //     total: 'Jami',
-  //     subtotal: 'Oraliq summa',
-  //     shipping: 'Yetkazib berish'
-  //   },
-  //   modal: {
-  //     title: 'Buyurtma holatini yangilash',
-  //     status: 'Holat',
-  //     tracking_number: 'Kuzatish raqami',
-  //     notes: 'Izohlar',
-  //     update: 'Holatni yangilash'
-  //   },
-  //   messages: {
-  //     update_success: 'Buyurtma holati muvaffaqiyatli yangilandi'
-  //   }
-  // },
-  // messages: {
-  //   confirm_delete: 'Rostdan ham o\'chirmoqchimisiz?',
-  //   success_save: 'Muvaffaqiyatli saqlandi',
-  //   success_delete: 'Muvaffaqiyatli o\'chirildi',
-  //   error_occurred: 'Xatolik yuz berdi'
-  // }  
   order_details: {
     order_info: {
       title: "Buyurtma haqida ma'lumot",
@@ -383,6 +353,4 @@ export default {
       cancelled: "Bekor qilindi"
     }
   }
-  
-  
 }

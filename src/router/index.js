@@ -16,6 +16,7 @@ import ProductForm from '../views/products/ProductForm.vue'
 import ProductEdit from '../views/products/ProductEdit.vue'
 import Reports from '../views/reports/Reports.vue'
 import CategoriesList from '../views/categories/CategoriesList.vue'
+import CategoriesDetail from '../views/categories/CategoriesDetail.vue'
 import CategoryForm from '../views/categories/CategoryForm.vue'
 import Settings from '../views/settings/Settings.vue'
 
@@ -65,6 +66,11 @@ const routes = [
         path: 'categories',
         name: 'categories',
         component: CategoriesList
+      },
+      {
+        path: 'categories/:id',
+        name: 'category-details',
+        component: CategoriesDetail
       },
       {
         path: 'categories/create',

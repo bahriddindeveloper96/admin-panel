@@ -1,171 +1,134 @@
 <template>
-  <div class="content">
-    <div class="content">
+  <div class="categories-wrapper">
+    <!-- Header Section -->
+    <div class="content-header">
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0">{{ $t('categories.title') }}</h1>
+            <h1>{{ $t('categories.title') }}</h1>
           </div>
-          <div class="col-sm-6">
-            <div class="float-sm-right">
-              <router-link to="/categories/create" class="btn btn-primary">
-                <i class="fas fa-plus"></i> {{ $t('categories.add_category') }}
-              </router-link>
-            </div>
+          <div class="col-sm-6 text-right">
+            <button class="btn btn-primary" @click="navigateToCreate">
+              <i class="fas fa-plus"></i> {{ $t('common.add') }}
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="content">
-      <div class="container-fluid">
-        <div class="card">
-          <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="d-flex gap-3">
-                <button 
-                  class="btn btn-danger d-flex align-items-center gap-2" 
-                  :disabled="!selectedCategories.length || loading"
-                  @click="deleteSelected"
-                >
-                  <i class="fas fa-trash"></i>
-                  <span>{{ $t('common.delete_selected') }}</span>
-                </button>
-                <button 
-                  class="btn btn-success d-flex align-items-center gap-2" 
-                  :disabled="loading"
-                  @click="exportCategories"
-                >
-                  <i class="fas fa-file-export"></i>
-                  <span>{{ $t('common.export') }}</span>
-                </button>
+    <!-- Main Content -->
+    <div class="content-main">
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-container">
+        <div class="spinner"></div>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="error-container">
+        {{ error }}
+      </div>
+
+      <!-- Categories List -->
+      <div v-else class="categories-container">
+        <div v-for="category in categories" :key="category.id" class="category-item">
+          <!-- Main Category Info -->
+          <div class="category-main">
+            <!-- <div class="category-image">
+              <img :src="category.image" :alt="getTranslationName(category)">
+            </div> -->
+            <div class="category-info">
+              <div class="category-header">
+                <h2 @click="navigateToDetail(category.id)" class="category-name">{{ getTranslationName(category) }}</h2>
+                <div class="category-status">
+                  <span :class="['status-badge', category.active ? 'active' : 'inactive']">
+                    {{ category.active ? $t('common.active') : $t('common.inactive') }}
+                  </span>
+                  <span v-if="category.featured" class="featured-badge">
+                    {{ $t('common.featured') }}
+                  </span>
+                </div>
               </div>
-              <div class="search-box">
-                <i class="fas fa-search search-icon"></i>
-                <input
-                  type="text"
-                  class="form-control search-input"
-                  :placeholder="$t('categories.search_placeholder')"
-                  v-model="search"
-                  @input="handleSearch"
-                  :disabled="loading"
-                >
+              <p class="category-description">{{ getTranslationDescription(category) }}</p>
+              
+              <!-- Category Details -->
+              <div class="category-details">
+                <div class="detail-item">
+                  <span class="detail-label">ID:</span>
+                  <span class="detail-value">#{{ category.id }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">{{ $t('common.slug') }}:</span>
+                  <span class="detail-value">{{ category.slug }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">{{ $t('common.order') }}:</span>
+                  <span class="detail-value">{{ category.order }}</span>
+                </div>
               </div>
+
+              <!-- Translations -->
+              <div class="translations">
+                <div v-for="translation in category.translations" 
+                     :key="translation.id" 
+                     class="translation-item">
+                  <span class="lang-badge" :class="translation.locale">
+                    {{ translation.locale.toUpperCase() }}
+                  </span>
+                  <span class="translation-name">{{ translation.name }}</span>
+                </div>
+              </div>
+
+              <!-- Timestamps -->
+              <div class="timestamps">
+                <span class="timestamp">
+                  <i class="far fa-calendar"></i>
+                  {{ formatDate(category.created_at) }}
+                </span>
+                <span class="timestamp">
+                  <i class="fas fa-pencil-alt"></i>
+                  {{ formatDate(category.updated_at) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="category-actions">
+              <button class="btn-edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn-delete">
+                <i class="fas fa-trash"></i>
+              </button>
             </div>
           </div>
 
-          <div class="card-body table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th class="text-center">
-                    <input
-                      type="checkbox"
-                      class="custom-checkbox"
-                      :checked="isAllSelected"
-                      @change="toggleSelectAll"
-                      :disabled="loading"
-                    >
-                  </th>
-                  <th>{{ $t('categories.table.image') }}</th>
-                  <th>{{ $t('categories.table.name') }}</th>
-                  <th>{{ $t('categories.table.parent') }}</th>
-                  <th>{{ $t('categories.table.products') }}</th>
-                  <th>{{ $t('categories.table.status') }}</th>
-                  <th class="text-center">{{ $t('common.actions') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-if="loading">
-                  <tr>
-                    <td colspan="7">
-                      <div class="d-flex justify-content-center align-items-center py-5">
-                        <div class="spinner-border" role="status">
-                          <span class="sr-only">{{ $t('common.loading') }}</span>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else-if="!categories.length">
-                  <tr>
-                    <td colspan="7">
-                      <div class="empty-state">
-                        <i class="fas fa-folder-open"></i>
-                        <p class="mb-0">{{ $t('categories.no_categories') }}</p>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else>
-                  <tr v-for="category in categories" :key="category.id">
-                    <td class="text-center">
-                      <input
-                        type="checkbox"
-                        class="custom-checkbox"
-                        :value="category.id"
-                        v-model="selectedCategories"
-                      >
-                    </td>
-                    <td>
-                      <img
-                        v-if="category.image_url"
-                        :src="category.image_url"
-                        :alt="category.name"
-                        class="category-image"
-                      >
-                      <div v-else class="no-image">
-                        <i class="fas fa-image"></i>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="fw-medium">{{ category.name }}</div>
-                      <small class="text-muted">{{ $t('common.id') }}: {{ category.id }}</small>
-                    </td>
-                    <td>
-                      <span class="parent-badge">{{ category.parent?.name || $t('categories.root_category') }}</span>
-                    </td>
-                    <td>
-                      <span class="products-badge">{{ category.products_count || 0 }}</span>
-                    </td>
-                    <td>
-                      <span :class="getStatusBadgeClass(category.status)">
-                        {{ category.status ? $t('common.status.active') : $t('common.status.inactive') }}
-                      </span>
-                    </td>
-                    <td>
-                      <div class="d-flex justify-content-center gap-2">
-                        <router-link
-                          :to="`/categories/${category.id}/edit`"
-                          class="btn btn-sm btn-info"
-                          :title="$t('common.edit')"
-                        >
-                          <i class="fas fa-edit"></i>
-                        </router-link>
-                        <button
-                          class="btn btn-sm btn-danger"
-                          @click="confirmDelete(category)"
-                          :disabled="loading"
-                          :title="$t('common.delete')"
-                        >
-                          <i class="fas fa-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="card-footer clearfix" v-if="pagination">
-            <pagination
-              :total="pagination.total"
-              :per-page="pagination.per_page"
-              :current-page="pagination.current_page"
-              :links="pagination.links"
-              @page-changed="handlePageChange"
-            />
+          <!-- Subcategories -->
+          <div v-if="category.children?.length" class="subcategories">
+            <h3 class="subcategories-title">{{ $t('categories.subcategories') }}</h3>
+            <div class="subcategories-list">
+              <div v-for="child in category.children" 
+                   :key="child.id" 
+                   class="subcategory-item">
+                <!-- <div class="subcategory-image">
+                  <img :src="child.image" :alt="getTranslationName(child)">
+                </div> -->
+                <div class="subcategory-info">
+                  <div class="subcategory-header">
+                    <h4>{{ getTranslationName(child) }}</h4>
+                    <span class="subcategory-id">#{{ child.id }}</span>
+                  </div>
+                  <p>{{ getTranslationDescription(child) }}</p>
+                  <div class="subcategory-meta">
+                    <span :class="['status-badge', child.active ? 'active' : 'inactive']">
+                      {{ child.active ? $t('common.active') : $t('common.inactive') }}
+                    </span>
+                    <span class="order-badge">
+                      {{ $t('common.order') }}: {{ child.order }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -174,265 +137,418 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { defineComponent, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import Swal from 'sweetalert2'
-import debounce from 'lodash/debounce'
-import Pagination from '@/components/Pagination.vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 
-export default {
+export default defineComponent({
   name: 'CategoriesList',
-  components: { Pagination },
   
   setup() {
     const store = useStore()
-    const loading = ref(false)
-    const categories = ref([])
-    const selectedCategories = ref([])
-    const search = ref('')
-    const pagination = ref(null)
+    const { t, locale } = useI18n()
+    const router = useRouter()
 
-    const isAllSelected = computed(() => {
-      return categories.value.length > 0 && selectedCategories.value.length === categories.value.length
-    })
+    const categories = computed(() => store.getters['categories/getCategories'])
+    const loading = computed(() => store.getters['categories/isLoading'])
+    const error = computed(() => store.getters['categories/getError'])
 
-    const getStatusBadgeClass = (status) => {
-      return {
-        'badge': true,
-        'bg-success': status === 'active',
-        'bg-danger': status === 'inactive'
-      }
-    }
-
-    const loadCategories = async () => {
-      try {
-        loading.value = true
-        const response = await store.dispatch('categories/fetchCategories', {
-          search: search.value
-        })
-        categories.value = response.data || response
-        if (response.meta) {
-          pagination.value = {
-            total: response.meta.total,
-            per_page: response.meta.per_page,
-            current_page: response.meta.current_page,
-            links: response.meta.links
-          }
-        }
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to load categories'
-        })
-      } finally {
-        loading.value = false
-      }
-    }
-
-    const handleSearch = debounce(() => {
-      loadCategories()
-    }, 300)
-
-    const toggleSelectAll = () => {
-      if (isAllSelected.value) {
-        selectedCategories.value = []
-      } else {
-        selectedCategories.value = categories.value.map(cat => cat.id)
-      }
-    }
-
-    const deleteSelected = async () => {
-      if (!selectedCategories.value.length) return
-
-      const result = await Swal.fire({
-        title: 'Are you sure?',
-        text: `Do you want to delete ${selectedCategories.value.length} selected categories?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete them',
-        cancelButtonText: 'Cancel'
-      })
-
-      if (result.isConfirmed) {
-        try {
-          await store.dispatch('categories/deleteCategories', selectedCategories.value)
-          selectedCategories.value = []
-          await loadCategories()
-          
-          Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: 'Categories deleted successfully'
-          })
-        } catch (error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to delete categories'
-          })
-        }
-      }
-    }
-
-    const confirmDelete = async (category) => {
-      const result = await Swal.fire({
-        title: 'Are you sure?',
-        text: `Do you want to delete the category "${category.name}"?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it',
-        cancelButtonText: 'Cancel'
-      })
-
-      if (result.isConfirmed) {
-        try {
-          await store.dispatch('categories/deleteCategory', category.id)
-          await loadCategories()
-          
-          Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: 'Category deleted successfully'
-          })
-        } catch (error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to delete category'
-          })
-        }
-      }
-    }
-
-    const exportCategories = () => {
-      // TODO: Implement export functionality
-      Swal.fire({
-        icon: 'info',
-        title: 'Coming Soon',
-        text: 'Export functionality will be available soon'
+    const formatDate = (dateString) => {
+      if (!dateString) return ''
+      return new Date(dateString).toLocaleString(locale.value, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       })
     }
 
-    const handlePageChange = (page) => {
-      // TODO: Implement pagination
-      loadCategories()
+    const getTranslationName = (category) => {
+      if (!category?.translations?.length) return ''
+      return category.translations.find(t => t.locale === locale.value)?.name ||
+             category.translations.find(t => t.locale === 'en')?.name ||
+             category.translations[0]?.name || ''
+    }
+
+    const getTranslationDescription = (category) => {
+      if (!category?.translations?.length) return ''
+      return category.translations.find(t => t.locale === locale.value)?.description ||
+             category.translations.find(t => t.locale === 'en')?.description ||
+             category.translations[0]?.description || ''
+    }
+
+    const navigateToDetail = (id) => {
+      router.push({ name: 'category-details', params: { id: id.toString() } })
+    }
+
+    const navigateToCreate = () => {
+      router.push({ name: 'category-create' })
     }
 
     onMounted(() => {
-      loadCategories()
+      store.dispatch('categories/fetchCategories')
     })
 
     return {
-      loading,
       categories,
-      selectedCategories,
-      search,
-      pagination,
-      isAllSelected,
-      getStatusBadgeClass,
-      handleSearch,
-      toggleSelectAll,
-      deleteSelected,
-      confirmDelete,
-      exportCategories,
-      handlePageChange
+      loading,
+      error,
+      formatDate,
+      getTranslationName,
+      getTranslationDescription,
+      navigateToDetail,
+      navigateToCreate,
+      t
     }
   }
-}
+})
 </script>
 
 <style scoped>
-.card {
-  box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
-  margin-bottom: 1rem;
+.categories-wrapper {
+  padding: 20px;
+  background: #f8f9fa;
+  min-height: 100vh;
 }
 
-.card-header {
-  padding: 1rem;
-  border-bottom: 1px solid rgba(0,0,0,.125);
+.content-header {
+  padding: 15px;
+  background-color: #fff;
+  margin-bottom: 20px;
 }
 
-.search-box {
-  position: relative;
-  width: 300px;
+.text-right {
+  text-align: right;
 }
 
-.search-icon {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6c757d;
+.content-main {
+  padding: 20px;
 }
 
-.search-input {
-  padding-left: 35px;
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container {
+  text-align: center;
+  color: #e74c3c;
+  padding: 20px;
+}
+
+.category-item {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.category-main {
+  display: flex;
+  padding: 20px;
+  gap: 20px;
 }
 
 .category-image {
-  width: 50px;
-  height: 50px;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.category-image img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  border-radius: 8px;
+}
+
+.category-info {
+  flex: 1;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.category-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.category-status {
+  display: flex;
+  gap: 8px;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.status-badge.active {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.inactive {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.featured-badge {
+  background: #fff3e0;
+  color: #f57c00;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.category-description {
+  color: #666;
+  margin: 0 0 15px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.category-details {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detail-label {
+  color: #666;
+  font-size: 14px;
+}
+
+.detail-value {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.translations {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.translation-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.lang-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
   border-radius: 4px;
 }
 
-.no-image {
-  width: 50px;
-  height: 50px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
+.lang-badge.en { background: #e3f2fd; color: #1976d2; }
+.lang-badge.ru { background: #f3e5f5; color: #7b1fa2; }
+.lang-badge.uz { background: #e8f5e9; color: #2e7d32; }
+
+.translation-name {
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.timestamps {
+  display: flex;
+  gap: 20px;
+  color: #666;
+  font-size: 13px;
+}
+
+.timestamp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-edit, .btn-delete {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6c757d;
+  transition: opacity 0.3s;
 }
 
-.parent-badge {
-  background-color: #e9ecef;
-  color: #495057;
-  padding: 4px 8px;
+.btn-edit {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.btn-delete {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.btn-edit:hover, .btn-delete:hover {
+  opacity: 0.8;
+}
+
+.subcategories {
+  background: #f8f9fa;
+  padding: 20px;
+  border-top: 1px solid #eee;
+}
+
+.subcategories-title {
+  font-size: 16px;
+  color: #2c3e50;
+  margin: 0 0 15px 0;
+}
+
+.subcategories-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.subcategory-item {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  gap: 15px;
+}
+
+.subcategory-image {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.subcategory-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.subcategory-info {
+  flex: 1;
+}
+
+.subcategory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.subcategory-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.subcategory-id {
+  background: #eee;
+  padding: 2px 8px;
   border-radius: 4px;
-  font-size: 0.875rem;
+  font-size: 13px;
+  color: #666;
 }
 
-.products-badge {
-  background-color: #e3f2fd;
-  color: #0d6efd;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.875rem;
+.subcategory-meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-.badge {
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-weight: 500;
-  font-size: 0.875rem;
+.order-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-  color: #6c757d;
-}
-
-.empty-state i {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-}
-
-.custom-checkbox {
-  width: 18px;
-  height: 18px;
+.category-name {
   cursor: pointer;
+  color: #409EFF;
+  transition: color 0.3s;
 }
 
-.gap-2 {
-  gap: 0.5rem;
+.category-name:hover {
+  color: #66b1ff;
+  text-decoration: underline;
 }
 
-.gap-3 {
-  gap: 1rem;
+@media (max-width: 768px) {
+  .category-main {
+    flex-direction: column;
+  }
+
+  .category-image {
+    width: 100%;
+    height: 200px;
+  }
+
+  .category-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .category-details {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .category-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .subcategories-list {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

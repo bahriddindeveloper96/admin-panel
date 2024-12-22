@@ -1,404 +1,319 @@
 <template>
-  <div class="content">
-    <div class="container-fluid">
-      <div class="card">
-        <div class="card-body">
-          <form @submit.prevent="handleSubmit">
-            <!-- Basic Information -->
-            <div class="row">
-              <div class="col-md-8">
-                <!-- Translations -->
-                <div class="card">
-                  <div class="card-header">
-                    <h4>Product Information</h4>
-                    <div class="card-tools">
-                      <div class="btn-group">
-                        <button
-                          v-for="lang in ['en', 'ru', 'uz']"
-                          :key="lang"
-                          type="button"
-                          class="btn btn-sm"
-                          :class="
-                            currentLang === lang ? 'btn-primary' : 'btn-default'
-                          "
-                          @click="currentLang = lang"
-                        >
-                          {{ lang.toUpperCase() }}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="card-body">
-                    <div class="form-group">
-                      <label>Product Name</label>
-                      <input
-                        v-model="form.translations[currentLang].name"
-                        type="text"
-                        class="form-control"
-                        :placeholder="
-                          'Enter product name in ' + currentLang.toUpperCase()
-                        "
-                      />
-                    </div>
+  <div class="product-form">
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>{{ $t('products.create_product') }}</h1>
+          </div>
+        </div>
+      </div>
+    </div>
 
-                    <div class="form-group">
-                      <label>Description</label>
-                      <textarea
-                        v-model="form.translations[currentLang].description"
-                        class="form-control"
-                        rows="4"
-                        :placeholder="
-                          'Enter product description in ' +
-                          currentLang.toUpperCase()
-                        "
-                      ></textarea>
-                    </div>
-                  </div>
+    <div class="content">
+      <div class="container-fluid">
+        <div class="card">
+          <div class="card-body">
+            <!-- Step Indicator -->
+            <div class="steps mb-4">
+              <div class="step" :class="{ active: currentStep === 1 }">
+                <div class="step-icon">
+                  <i class="fas fa-info-circle"></i>
                 </div>
-
-                <div class="form-group">
-                  <label>Slug</label>
-                  <input
-                    v-model="form.slug"
-                    type="text"
-                    class="form-control"
-                    placeholder="Enter product slug (e.g. iphone-15-pro)"
-                  />
-                </div>
+                <div class="step-label">{{ $t('products.basic_info') }}</div>
               </div>
+              <div class="step" :class="{ active: currentStep === 2 }">
+                <div class="step-icon">
+                  <i class="fas fa-list"></i>
+                </div>
+                <div class="step-label">{{ $t('products.attributes') }}</div>
+              </div>
+              <div class="step" :class="{ active: currentStep === 3 }">
+                <div class="step-icon">
+                  <i class="fas fa-tags"></i>
+                </div>
+                <div class="step-label">{{ $t('products.variants') }}</div>
+              </div>
+            </div>
 
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label>Category</label>
-                  <select v-model="form.category_id" class="form-control">
-                    <option value="">Select Category</option>
-                    <option
-                      v-for="category in categories"
-                      :key="category.id"
-                      :value="category.id"
+            <!-- Step 1: Basic Information -->
+            <div v-if="currentStep === 1">
+              <form @submit.prevent="submitBasicInfo">
+                <!-- Category Selection -->
+                <div class="form-group animated fadeIn">
+                  <label class="form-label">
+                    <i class="fas fa-folder text-primary"></i>
+                    {{ $t('products.category') }}
+                  </label>
+                  <div class="select-wrapper">
+                    <select 
+                      v-model="form.category_id" 
+                      class="form-control custom-select"
+                      required
+                      @change="handleCategoryChange"
                     >
-                      {{ category.name }}
-                    </option>
-                  </select>
-                </div>
-
-                <div class="form-check mb-3">
-                  <input
-                    type="checkbox"
-                    class="form-check-input"
-                    id="active"
-                    v-model="form.active"
-                  />
-                  <label class="form-check-label" for="active">Active</label>
-                </div>
-
-                <div class="form-check mb-3">
-                  <input
-                    type="checkbox"
-                    class="form-check-input"
-                    id="featured"
-                    v-model="form.featured"
-                  />
-                  <label class="form-check-label" for="featured"
-                    >Featured</label
-                  >
-                </div>
-              </div>
-            </div>
-
-            <!-- Attributes -->
-            <div class="card mt-4">
-              <div class="card-header">
-                <h4>Product Attributes</h4>
-              </div>
-              <div class="card-body">
-                <!-- Predefined Attributes -->
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label>Brand</label>
-                      <input
-                        v-model="form.attributes.Brand"
-                        type="text"
-                        class="form-control"
-                        placeholder="e.g. Apple, Samsung"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label>Display Size</label>
-                      <input
-                        v-model="form.attributes['Display Size']"
-                        type="text"
-                        class="form-control"
-                        placeholder="e.g. 6.1 inches"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label>Display Resolution</label>
-                      <input
-                        v-model="form.attributes['Display Resolution']"
-                        type="text"
-                        class="form-control"
-                        placeholder="e.g. 2556 x 1179 pixels"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label>Processor</label>
-                      <input
-                        v-model="form.attributes.Processor"
-                        type="text"
-                        class="form-control"
-                        placeholder="e.g. A17 Pro chip"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label>Main Camera</label>
-                      <input
-                        v-model="form.attributes['Main Camera']"
-                        type="text"
-                        class="form-control"
-                        placeholder="e.g. 48MP + 12MP + 12MP"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label>Front Camera</label>
-                      <input
-                        v-model="form.attributes['Front Camera']"
-                        type="text"
-                        class="form-control"
-                        placeholder="e.g. 12MP TrueDepth"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label>Battery Capacity</label>
-                      <input
-                        v-model="form.attributes['Battery Capacity']"
-                        type="text"
-                        class="form-control"
-                        placeholder="e.g. 3274 mAh"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label>Water Resistance</label>
-                      <input
-                        v-model="form.attributes['Water Resistance']"
-                        type="text"
-                        class="form-control"
-                        placeholder="e.g. IP68"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Boolean Attributes -->
-                <div class="row mb-3">
-                  <div class="col-md-3">
-                    <div class="form-check">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="fastCharging"
-                        v-model="form.attributes['Fast Charging']"
-                      />
-                      <label class="form-check-label" for="fastCharging"
-                        >Fast Charging</label
+                      <option value="">{{ $t('products.select_category') }}</option>
+                      <option 
+                        v-for="category in categories" 
+                        :key="category.id" 
+                        :value="category.id"
                       >
-                    </div>
-                  </div>
-                  <div class="col-md-3">
-                    <div class="form-check">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="5gSupport"
-                        v-model="form.attributes['5G Support']"
-                      />
-                      <label class="form-check-label" for="5gSupport"
-                        >5G Support</label
-                      >
-                    </div>
-                  </div>
-                  <div class="col-md-3">
-                    <div class="form-check">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="nfc"
-                        v-model="form.attributes.NFC"
-                      />
-                      <label class="form-check-label" for="nfc">NFC</label>
-                    </div>
-                  </div>
-                  <div class="col-md-3">
-                    <div class="form-check">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        id="wirelessCharging"
-                        v-model="form.attributes['Wireless Charging']"
-                      />
-                      <label class="form-check-label" for="wirelessCharging"
-                        >Wireless Charging</label
-                      >
+                        {{ getTranslationName(category) }}
+                      </option>
+                    </select>
+                    <div class="select-icon">
+                      <i class="fas fa-chevron-down"></i>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- Variants -->
-            <div class="card mt-4">
-              <div class="card-header">
-                <h4>Product Variants</h4>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-primary"
-                  @click="addVariant"
-                >
-                  <i class="fas fa-plus"></i> Add Variant
-                </button>
-              </div>
-              <div class="card-body">
-                <div
-                  v-for="(variant, index) in form.variants"
-                  :key="index"
-                  class="card mb-3"
-                >
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-md-4">
-                        <div class="form-group">
-                          <label>RAM</label>
-                          <input
-                            v-model="variant.attribute_values.RAM"
+                <!-- Translations -->
+                <div class="translations-container">
+                  <div class="translations-tabs">
+                    <div 
+                      v-for="locale in ['uz', 'ru', 'en']" 
+                      :key="locale"
+                      class="tab-item"
+                      :class="{ active: activeLocale === locale }"
+                      @click="activeLocale = locale"
+                    >
+                      <div class="tab-icon">
+                        <i class="fas" :class="getLocaleIcon(locale)"></i>
+                      </div>
+                      <span class="tab-text">{{ locale.toUpperCase() }}</span>
+                    </div>
+                  </div>
+
+                  <div class="translations-content">
+                    <div 
+                      v-for="locale in ['uz', 'ru', 'en']" 
+                      :key="locale"
+                      class="translation-panel"
+                      :class="{ active: activeLocale === locale }"
+                    >
+                      <div class="form-group animated fadeIn">
+                        <label class="form-label">
+                          <i class="fas fa-font text-primary"></i>
+                          {{ $t('common.name') }}
+                        </label>
+                        <div class="input-wrapper">
+                          <input 
+                            v-model="form.translations[locale].name"
                             type="text"
                             class="form-control"
-                            placeholder="e.g. 8GB"
-                          />
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="form-group">
-                          <label>Storage</label>
-                          <input
-                            v-model="variant.attribute_values.Storage"
-                            type="text"
-                            class="form-control"
-                            placeholder="e.g. 128GB"
-                          />
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="form-group">
-                          <label>Color</label>
-                          <input
-                            v-model="variant.attribute_values.Color"
-                            type="text"
-                            class="form-control"
-                            placeholder="e.g. Black"
-                          />
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="form-group">
-                          <label>Price</label>
-                          <input
-                            v-model.number="variant.price"
-                            type="number"
-                            step="0.01"
-                            class="form-control"
-                            placeholder="0.00"
-                          />
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="form-group">
-                          <label>Stock</label>
-                          <input
-                            v-model.number="variant.stock"
-                            type="number"
-                            class="form-control"
-                            placeholder="0"
-                          />
-                        </div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="form-group">
-                          <label>Images</label>
-                          <input
-                            type="file"
-                            class="form-control"
-                            @change="(event) => handleImageUpload(event, index)"
-                            multiple
-                            accept="image/*"
-                          />
-                        </div>
-                      </div>
-                      <div class="col-md-4 d-flex align-items-end">
-                        <button
-                          type="button"
-                          class="btn btn-danger"
-                          @click="removeVariant(index)"
-                        >
-                          <i class="fas fa-trash"></i> Remove Variant
-                        </button>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div
-                        v-for="(image, imgIndex) in variant.images"
-                        :key="imgIndex"
-                        class="col-md-3"
-                      >
-                        <div class="position-relative">
-                          <img :src="image" class="img-fluid mb-2" />
-                          <button
-                            type="button"
-                            class="btn btn-danger btn-sm position-absolute"
-                            style="top: 5px; right: 5px"
-                            @click="removeImage(index, imgIndex)"
+                            :placeholder="$t('products.enter_name')"
+                            required
                           >
-                            <i class="fas fa-times"></i>
-                          </button>
+                          <div class="input-icon">
+                            <i class="fas fa-pen"></i>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="form-group animated fadeIn">
+                        <label class="form-label">
+                          <i class="fas fa-align-left text-primary"></i>
+                          {{ $t('common.description') }}
+                        </label>
+                        <div class="input-wrapper">
+                          <textarea
+                            v-model="form.translations[locale].description"
+                            class="form-control"
+                            :placeholder="$t('products.enter_description')"
+                            rows="3"
+                            required
+                          ></textarea>
+                          <div class="input-icon textarea-icon">
+                            <i class="fas fa-paragraph"></i>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i>
+                    {{ $t('common.next') }}
+                  </button>
+                </div>
+              </form>
             </div>
 
-            <div class="row mt-4">
-              <div class="col-12">
-                <button type="submit" class="btn btn-primary">
-                  <i class="fas fa-save"></i> Save Product
-                </button>
-              </div>
+            <!-- Step 2: Attributes -->
+            <div v-else-if="currentStep === 2">
+              <form @submit.prevent="submitAttributes">
+                <div class="attributes-container">
+                  <div v-if="categoryAttributes.length" class="attributes-list">
+                    <div v-for="attribute in categoryAttributes" :key="attribute.id" class="attribute-card animated fadeIn">
+                      <div class="attribute-header">
+                        <label class="form-label">
+                          <i class="fas fa-tag text-primary"></i>
+                          {{ attribute.name }}
+                        </label>
+                      </div>
+                      <div class="input-wrapper">
+                        <input 
+                          v-model="attributeForm.attributes[attribute.id]"
+                          type="text"
+                          class="form-control"
+                          :placeholder="$t('products.enter_value')"
+                          required
+                        >
+                        <div class="input-icon">
+                          <i class="fas fa-pen"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="no-attributes">
+                    {{ $t('products.no_attributes') }}
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" @click="currentStep = 1">
+                    <i class="fas fa-arrow-left"></i>
+                    {{ $t('common.back') }}
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i>
+                    {{ $t('common.next') }}
+                  </button>
+                </div>
+              </form>
             </div>
-          </form>
+
+            <!-- Step 3: Variants -->
+            <div v-else-if="currentStep === 3">
+              <form @submit.prevent="submitVariants">
+                <div class="variants-container">
+                  <div v-for="(variant, index) in variantForm.variants" :key="index" class="variant-card animated fadeIn">
+                    <div class="variant-header">
+                      <h4>{{ $t('products.variant') }} #{{ index + 1 }}</h4>
+                      <button 
+                        v-if="variantForm.variants.length > 1"
+                        type="button" 
+                        class="btn btn-icon btn-danger"
+                        @click="removeVariant(index)"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+
+                    <!-- Price and Stock -->
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="form-label">
+                            <i class="fas fa-dollar-sign text-success"></i>
+                            {{ $t('products.price') }}
+                          </label>
+                          <div class="input-wrapper">
+                            <input 
+                              v-model.number="variant.price"
+                              type="number"
+                              class="form-control"
+                              step="0.01"
+                              min="0"
+                              required
+                            >
+                            <div class="input-icon">
+                              <i class="fas fa-tag"></i>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="form-label">
+                            <i class="fas fa-boxes text-warning"></i>
+                            {{ $t('products.stock') }}
+                          </label>
+                          <div class="input-wrapper">
+                            <input 
+                              v-model.number="variant.stock"
+                              type="number"
+                              class="form-control"
+                              min="0"
+                              required
+                            >
+                            <div class="input-icon">
+                              <i class="fas fa-warehouse"></i>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Variant Attributes -->
+                    <div class="variant-attributes">
+                      <div v-for="attribute in categoryAttributes" :key="attribute.id" class="form-group">
+                        <label class="form-label">
+                          <i class="fas fa-tag text-info"></i>
+                          {{ attribute.name }}
+                        </label>
+                        <div class="input-wrapper">
+                          <input 
+                            v-model="variant.attribute_values[attribute.id]"
+                            type="text"
+                            class="form-control"
+                            :placeholder="$t('products.enter_value')"
+                            required
+                          >
+                          <div class="input-icon">
+                            <i class="fas fa-pen"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Images -->
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="fas fa-images text-primary"></i>
+                        {{ $t('products.images') }}
+                      </label>
+                      <div class="input-wrapper">
+                        <input 
+                          v-model="variant.images"
+                          type="text"
+                          class="form-control"
+                          placeholder="/storage/products/image.jpg"
+                          required
+                        >
+                        <div class="input-icon">
+                          <i class="fas fa-camera"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Add Variant Button -->
+                  <button 
+                    type="button" 
+                    class="btn btn-add"
+                    @click="addVariant"
+                  >
+                    <i class="fas fa-plus-circle"></i>
+                    {{ $t('products.add_variant') }}
+                  </button>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" @click="currentStep = 2">
+                    <i class="fas fa-arrow-left"></i>
+                    {{ $t('common.back') }}
+                  </button>
+                  <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i>
+                    {{ $t('common.save') }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -406,185 +321,368 @@
 </template>
 
 <script>
-import { ref, reactive } from "vue";
-import { useRouter } from "vue-router";
-import axios from "axios";
-import Swal from "sweetalert2";
+import { ref, reactive, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
-  name: "ProductForm",
-
+  name: 'ProductForm',
   setup() {
-    const router = useRouter();
-    const currentLang = ref("en");
+    const router = useRouter()
+    const currentStep = ref(1)
+    const createdProductId = ref(null)
+    const categories = ref([])
+    const categoryAttributes = ref([])
+    const activeLocale = ref('uz')
 
-    // Initialize form with predefined structure
+    // Basic information form
     const form = reactive({
-      category_id: "",
-      user_id: 1, // Default user_id
-      slug: "",
-      active: true,
-      featured: false,
-      images: [],
-      attributes: {
-        Brand: "",
-        "Display Size": "",
-        "Display Resolution": "",
-        Processor: "",
-        "Main Camera": "",
-        "Front Camera": "",
-        "Battery Capacity": "",
-        "Fast Charging": false,
-        "5G Support": false,
-        NFC: false,
-        "Wireless Charging": false,
-        "Water Resistance": "",
-      },
+      category_id: '',
       translations: {
-        en: { name: "", description: "" },
-        ru: { name: "", description: "" },
-        uz: { name: "", description: "" },
-      },
-      variants: [],
-    });
+        uz: { name: '', description: '' },
+        ru: { name: '', description: '' },
+        en: { name: '', description: '' }
+      }
+    })
 
-    const categories = ref([]);
+    // Attributes form
+    const attributeForm = reactive({
+      attributes: {}
+    })
 
+    // Variants form
+    const variantForm = reactive({
+      variants: [
+        {
+          price: 0,
+          stock: 0,
+          attribute_values: {},
+          images: []
+        }
+      ]
+    })
+
+    // Fetch categories
     const fetchCategories = async () => {
       try {
-        const response = await axios.get("/admin/categories");
-        categories.value = response.data;
+        const response = await axios.get('/admin/categories')
+        categories.value = response.data.data || response.data
       } catch (error) {
-        console.error("Error fetching categories:", error);
+        console.error('Error fetching categories:', error)
+        alert($t('errors.fetch_categories'))
       }
-    };
+    }
 
-    const handleImageUpload = async (event, variantIndex = null) => {
-      const files = event.target.files;
-      const formData = new FormData();
-
-      Array.from(files).forEach((file) => {
-        formData.append("images[]", file);
-      });
-
+    // Fetch category attributes
+    const fetchCategoryAttributes = async (categoryId) => {
       try {
-        const response = await axios.post(
-          "/admin/products/upload-images",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
+        const response = await axios.get(`/admin/categories/${categoryId}`)
+        if (response.data.data?.attribute_groups) {
+          const attributes = []
+          response.data.data.attribute_groups.forEach(group => {
+            if (group.attributes) {
+              attributes.push(...group.attributes)
+            }
+          })
+          categoryAttributes.value = attributes
+        }
+        
+        // Reset attribute forms when category changes
+        attributeForm.attributes = {}
+        variantForm.variants.forEach(variant => {
+          variant.attribute_values = {}
+        })
+      } catch (error) {
+        console.error('Error fetching category attributes:', error)
+        alert($t('errors.fetch_attributes'))
+      }
+    }
 
-        const relativePaths = response.data.paths;
-        const baseURL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+    // Handle category change
+    const handleCategoryChange = () => {
+      if (form.category_id) {
+        fetchCategoryAttributes(form.category_id)
+      }
+    }
 
-        const imagePaths = relativePaths.map((path) =>
-          path.startsWith("http") ? path : `${baseURL}${path}`
-        );
+    // Submit basic information
+    const submitBasicInfo = async () => {
+      try {
+        const productData = {
+          category_id: parseInt(form.category_id),
+          translations: form.translations,
+          active: true,
+          featured: false
+        };
 
-        if (variantIndex !== null) {
-          if (!form.variants[variantIndex].images) {
-            form.variants[variantIndex].images = [];
-          }
-          form.variants[variantIndex].images.push(...imagePaths);
+        console.log('Sending product data:', productData);
+
+        const response = await axios.post('/admin/products', productData);
+        console.log('Server response:', response.data);
+
+        if (response.data.product?.id) {
+          createdProductId.value = response.data.product.id;
+          currentStep.value = 2;
+          alert($t('success.product_basic_info'));
+        } else if (response.data.success === true) {
+          // If success is true but product is in a different format
+          createdProductId.value = response.data.data?.id || response.data.id;
+          currentStep.value = 2;
+          alert($t('success.product_basic_info'));
         } else {
-          form.images.push(...imagePaths);
+          throw new Error('Invalid server response format');
         }
       } catch (error) {
-        console.error("Error uploading images:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error!",
-          text: error.response?.data?.message || "Failed to upload images.",
-        });
+        console.error('Error creating product:', error);
+        console.log('Error response:', error.response?.data);
+        
+        if (error.response?.data?.errors) {
+          // Handle validation errors
+          const errorMessages = Object.values(error.response.data.errors)
+            .flat()
+            .join('\n');
+          alert(`Validation errors:\n${errorMessages}`);
+        } else {
+          alert(error.response?.data?.message || $t('errors.create_product'));
+        }
       }
     };
 
-    const removeImage = (variantIndex, imageIndex) => {
-      form.variants[variantIndex].images.splice(imageIndex, 1);
-    };
+    // Submit attributes
+    const submitAttributes = async () => {
+      try {
+        await axios.post(`/admin/products/${createdProductId.value}/attributes`, {
+          attributes: attributeForm.attributes
+        })
+        currentStep.value = 3
+        alert($t('success.product_attributes'))
+      } catch (error) {
+        console.error('Error adding attributes:', error)
+        alert(error.response?.data?.message || $t('errors.add_attributes'))
+      }
+    }
 
+    // Submit variants
+    const submitVariants = async () => {
+      try {
+        // Format variants data
+        const formattedVariants = variantForm.variants.map(variant => ({
+          price: variant.price,
+          stock: variant.stock,
+          attribute_values: variant.attribute_values,
+          images: Array.isArray(variant.images) ? variant.images : [variant.images]
+        }))
+
+        await axios.post(`/admin/products/${createdProductId.value}/variants`, {
+          variants: formattedVariants
+        })
+        
+        alert($t('success.product_created'))
+        router.push('/products')
+      } catch (error) {
+        console.error('Error adding variants:', error)
+        alert(error.response?.data?.message || $t('errors.add_variants'))
+      }
+    }
+
+    // Variant management
     const addVariant = () => {
-      form.variants.push({
-        attribute_values: {
-          RAM: "",
-          Storage: "",
-          Color: "",
-        },
+      variantForm.variants.push({
         price: 0,
         stock: 0,
-        images: [], // Initialize images for the new variant
-      });
-    };
+        attribute_values: {},
+        images: []
+      })
+    }
 
     const removeVariant = (index) => {
-      form.variants.splice(index, 1);
-    };
+      variantForm.variants.splice(index, 1)
+    }
 
-    const handleSubmit = async () => {
-      try {
-        // Validate if at least one variant exists
-        if (form.variants.length === 0) {
-          form.variants.push({
-            attribute_values: {
-              RAM: "",
-              Storage: "",
-              Color: "",
-            },
-            price: 0,
-            stock: 0,
-            images: [], // Initialize images for the new variant
-          });
-        }
-
-        // Ensure all variants have price and stock
-        form.variants.forEach((variant) => {
-          if (!variant.price) variant.price = 0;
-          if (!variant.stock) variant.stock = 0;
-        });
-
-        const response = await axios.post("/admin/products", form);
-
-        Swal.fire({
-          icon: "success",
-          title: "Success!",
-          text: "Product has been created successfully.",
-        });
-
-        router.push("/admin/products");
-      } catch (error) {
-        console.error("Error creating product:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error!",
-          text: error.response?.data?.message || "Something went wrong!",
-        });
+    // Locale helpers
+    const getLocaleIcon = (locale) => {
+      switch(locale) {
+        case 'uz': return 'fa-flag text-success'
+        case 'ru': return 'fa-flag text-danger'
+        case 'en': return 'fa-flag text-primary'
+        default: return 'fa-flag'
       }
-    };
+    }
 
-    fetchCategories();
+    const getTranslationName = (category) => {
+      const translation = category.translations?.find(t => t.locale === 'en')
+      return translation ? translation.name : category.name || `Category ${category.id}`
+    }
+
+    // Initialize
+    fetchCategories()
 
     return {
-      form,
+      currentStep,
       categories,
-      currentLang,
-      handleImageUpload,
-      removeImage,
+      categoryAttributes,
+      form,
+      attributeForm,
+      variantForm,
+      activeLocale,
+      getLocaleIcon,
+      getTranslationName,
+      handleCategoryChange,
+      submitBasicInfo,
+      submitAttributes,
+      submitVariants,
       addVariant,
-      removeVariant,
-      handleSubmit,
-    };
-  },
-};
+      removeVariant
+    }
+  }
+}
 </script>
 
 <style scoped>
-.card-tools {
+.product-form {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.step {
+  flex: 1;
+  text-align: center;
+  padding: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.step-icon {
+  width: 50px;
+  height: 50px;
+  background: #f8f9fa;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.5rem;
+  border: 2px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.step.active .step-icon {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.step-label {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.step.active .step-label {
+  color: #007bff;
+  font-weight: 500;
+}
+
+.variant-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #e9ecef;
+}
+
+.variant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.variant-header h4 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.25rem;
+}
+
+.btn-add {
+  background: #e9ecef;
+  color: #495057;
+  border: 2px dashed #ced4da;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.btn-add:hover {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.btn-icon {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
   position: absolute;
-  right: 1rem;
-  top: 0.5rem;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  opacity: 0.5;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .variant-card {
+    background: #2d2d2d;
+    border-color: #404040;
+  }
+
+  .variant-header h4 {
+    color: #fff;
+  }
+
+  .step-icon {
+    background: #333;
+    border-color: #404040;
+  }
+
+  .btn-add {
+    background: #404040;
+    border-color: #495057;
+    color: #fff;
+  }
+
+  .btn-add:hover {
+    background: #007bff;
+    border-color: #007bff;
+  }
 }
 </style>

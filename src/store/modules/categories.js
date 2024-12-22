@@ -1,4 +1,5 @@
 import axios from 'axios'
+import i18n from '@/i18n'
 
 const state = {
   categories: [],
@@ -11,7 +12,38 @@ const getters = {
   getCategories: state => state.categories,
   getCategory: state => state.category,
   isLoading: state => state.loading,
-  getError: state => state.error
+  getError: state => state.error,
+  
+  // New getters for localized data
+  getLocalizedCategories: (state) => {
+    const currentLocale = i18n.global.locale
+    return state.categories.map(category => ({
+      ...category,
+      name: category.translations.find(t => t.locale === currentLocale)?.name || 
+            category.translations.find(t => t.locale === 'en')?.name || '',
+      description: category.translations.find(t => t.locale === currentLocale)?.description ||
+                  category.translations.find(t => t.locale === 'en')?.description || '',
+      children: category.children ? category.children.map(child => ({
+        ...child,
+        name: child.translations.find(t => t.locale === currentLocale)?.name ||
+              child.translations.find(t => t.locale === 'en')?.name || '',
+        description: child.translations.find(t => t.locale === currentLocale)?.description ||
+                    child.translations.find(t => t.locale === 'en')?.description || ''
+      })) : []
+    }))
+  },
+  
+  getLocalizedCategory: (state) => {
+    if (!state.category) return null
+    const currentLocale = i18n.global.locale
+    const translation = state.category.translations.find(t => t.locale === currentLocale) ||
+                       state.category.translations.find(t => t.locale === 'en')
+    return {
+      ...state.category,
+      name: translation?.name || '',
+      description: translation?.description || ''
+    }
+  }
 }
 
 const actions = {
@@ -19,10 +51,17 @@ const actions = {
   async fetchCategories({ commit }) {
     try {
       commit('SET_LOADING', true)
+      commit('CLEAR_ERROR')
       const response = await axios.get('/admin/categories')
-      commit('SET_CATEGORIES', response.data)
+      console.log('API Response:', response.data)
+      if (response.data?.success && Array.isArray(response.data.data)) {
+        commit('SET_CATEGORIES', response.data.data)
+      } else {
+        commit('SET_ERROR', 'Invalid data format received from server')
+      }
       return response.data
     } catch (error) {
+      console.error('Fetch Categories Error:', error)
       commit('SET_ERROR', error.response?.data?.message || 'Failed to fetch categories')
       throw error
     } finally {
@@ -35,7 +74,9 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       const response = await axios.get(`/admin/categories/${id}`)
-      commit('SET_CATEGORY', response.data)
+      if (response.data?.success && response.data.data) {
+        commit('SET_CATEGORY', response.data.data)
+      }
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to fetch category')
@@ -45,11 +86,14 @@ const actions = {
     }
   },
 
-  // Create new category
-  async createCategory({ commit }, categoryData) {
+  // Create new category with translations
+  async createCategory({ commit, dispatch }, categoryData) {
     try {
       commit('SET_LOADING', true)
       const response = await axios.post('/admin/categories', categoryData)
+      if (response.data?.success) {
+        await dispatch('fetchCategories')
+      }
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to create category')
@@ -59,11 +103,14 @@ const actions = {
     }
   },
 
-  // Update existing category
-  async updateCategory({ commit }, { id, categoryData }) {
+  // Update category with translations
+  async updateCategory({ commit, dispatch }, { id, categoryData }) {
     try {
       commit('SET_LOADING', true)
       const response = await axios.put(`/admin/categories/${id}`, categoryData)
+      if (response.data?.success) {
+        await dispatch('fetchCategories')
+      }
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to update category')
@@ -77,7 +124,11 @@ const actions = {
   async deleteCategory({ commit }, id) {
     try {
       commit('SET_LOADING', true)
-      await axios.delete(`/admin/categories/${id}`)
+      const response = await axios.delete(`/admin/categories/${id}`)
+      if (response.data?.success) {
+        commit('REMOVE_CATEGORY', id)
+      }
+      return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to delete category')
       throw error
@@ -93,6 +144,9 @@ const mutations = {
   },
   SET_CATEGORY(state, category) {
     state.category = category
+  },
+  REMOVE_CATEGORY(state, id) {
+    state.categories = state.categories.filter(category => category.id !== id)
   },
   SET_LOADING(state, loading) {
     state.loading = loading

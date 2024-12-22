@@ -31,7 +31,9 @@ export default {
     actions: 'Actions',
     status: {
       active: 'Active',
-      inactive: 'Inactive'
+      inactive: 'Inactive',
+      featured: 'Featured',
+      notFeatured: 'Not Featured'
     },
     date: 'Date',
     customer: 'Customer',
@@ -40,7 +42,16 @@ export default {
     order_id: 'Order ID',
     products: 'Products',
     loading: 'Loading...',
-    id: 'ID'
+    id: 'ID',
+    order: 'Order',
+    slug: 'Slug',
+    name: 'Name',
+    description: 'Description',
+    type: 'Type',
+    required: 'Required',
+    filterable: 'Filterable',
+    yes: 'Yes',
+    no: 'No'
   },
   products: {
     title: 'Products',
@@ -63,6 +74,7 @@ export default {
     search_placeholder: 'Search categories...',
     no_categories: 'No categories found',
     root_category: 'Root Category',
+    subcategories: 'Subcategories',
     table: {
       image: 'Image',
       name: 'Name',

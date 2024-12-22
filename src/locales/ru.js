@@ -40,7 +40,24 @@ export default {
     order_id: 'Номер заказа',
     products: 'Товары',
     loading: 'Загрузка...',
-    id: 'ID'
+    id: 'ID',
+    name: 'Название',
+    description: 'Описание',
+    type: 'Тип',
+    required: 'Обязательное',
+    filterable: 'Фильтруемое',
+    yes: 'Да',
+    no: 'Нет',
+    order: 'Порядок',
+    slug: 'Слаг',
+    active: 'Активный',
+    inactive: 'Неактивный',
+    featured: 'Рекомендуемый',
+    notFeatured: 'Не рекомендуемый',
+    edit: 'Редактировать',
+    delete: 'Удалить',
+    order: 'Порядок',
+    slug: 'Слаг'
   },
   products: {
     title: 'Товары',
@@ -113,6 +130,7 @@ export default {
     search_placeholder: 'Поиск категорий...',
     no_categories: 'Категории не найдены',
     root_category: 'Корневая категория',
+    subcategories: 'Подкатегории',
     table: {
       image: 'Изображение',
       name: 'Название',
@@ -276,114 +294,73 @@ export default {
       }
     }
   },
-  // order_details: {
-  //   order_info: {
-  //     title: 'Информация о заказе',
-  //     order_id: 'ID заказа',
-  //     status: 'Статус',
-  //     update_status: 'Обновить статус',
-  //     date: 'Дата',
-  //     total_amount: 'Общая сумма',
-  //     tracking_number: 'Номер отслеживания',
-  //     notes: 'Примечания'
-  //   },
-  //   customer_info: {
-  //     title: 'Информация о клиенте',
-  //     name: 'Имя',
-  //     email: 'Email',
-  //     phone: 'Телефон'
-  //   },
-  //   order_items: {
-  //     title: 'Товары в заказе',
-  //     product: 'Товар',
-  //     sku: 'Артикул',
-  //     price: 'Цена',
-  //     quantity: 'Количество',
-  //     total: 'Итого',
-  //     subtotal: 'Подытог',
-  //     shipping: 'Доставка'
-  //   },
-  //   modal: {
-  //     title: 'Обновить статус заказа',
-  //     status: 'Статус',
-  //     tracking_number: 'Номер отслеживания',
-  //     notes: 'Примечания',
-  //     update: 'Обновить статус'
-  //   },
-  //   messages: {
-  //     update_success: 'Статус заказа успешно обновлен'
-  //   }
-  // },
+  order_details: {
+    order_info: {
+      title: "Информация о заказе",
+      order_number: "Номер заказа",
+      status: "Статус",
+      update_status: "Обновить статус",
+      payment_status: "Статус оплаты",
+      created_at: "Создан",
+      total_amount: "Общая сумма",
+      delivery_cost: "Стоимость доставки",
+      total_discount: "Скидка"
+    },
+    customer_info: {
+      title: "Информация о клиенте",
+      name: "Имя",
+      email: "Эл. почта",
+      phone: "Телефон"
+    },
+    delivery_info: {
+      title: "Информация о доставке",
+      name: "Имя получателя",
+      phone: "Телефон получателя",
+      address: "Адрес",
+      method: "Метод доставки",
+      comment: "Комментарий"
+    },
+    order_items: {
+      title: "Товары в заказе",
+      product: "Товар",
+      price: "Цена",
+      quantity: "Количество",
+      total: "Итого",
+      subtotal: "Промежуточный итог",
+      delivery_cost: "Стоимость доставки",
+      discount: "Скидка"
+    },
+    status_history: {
+      title: "История статусов",
+      date: "Дата",
+      from: "С",
+      to: "На",
+      comment: "Комментарий"
+    },
+    modal: {
+      title: "Обновить статус заказа",
+      status: "Статус",
+      tracking_number: "Номер отслеживания",
+      notes: "Заметки",
+      update: "Обновить"
+    },
+    messages: {
+      update_success: "Статус заказа успешно обновлен"
+    }
+  },
+  orders: {
+    statuses: {
+      pending: "В ожидании",
+      processing: "В обработке",
+      shipped: "Отправлено",
+      delivered: "Доставлено",
+      cancelled: "Отменено"
+    }
+  },
   messages: {
     confirm_delete: 'Вы уверены, что хотите удалить?',
     success_save: 'Успешно сохранено',
     success_delete: 'Успешно удалено',
     error_occurred: 'Произошла ошибка'
-  },
-  
-    order_details: {
-      order_info: {
-        title: "Информация о заказе",
-        order_number: "Номер заказа",
-        status: "Статус",
-        update_status: "Обновить статус",
-        payment_status: "Статус оплаты",
-        created_at: "Создан",
-        total_amount: "Общая сумма",
-        delivery_cost: "Стоимость доставки",
-        total_discount: "Скидка"
-      },
-      customer_info: {
-        title: "Информация о клиенте",
-        name: "Имя",
-        email: "Эл. почта",
-        phone: "Телефон"
-      },
-      delivery_info: {
-        title: "Информация о доставке",
-        name: "Имя получателя",
-        phone: "Телефон получателя",
-        address: "Адрес",
-        method: "Метод доставки",
-        comment: "Комментарий"
-      },
-      order_items: {
-        title: "Товары в заказе",
-        product: "Товар",
-        price: "Цена",
-        quantity: "Количество",
-        total: "Итого",
-        subtotal: "Промежуточный итог",
-        delivery_cost: "Стоимость доставки",
-        discount: "Скидка"
-      },
-      status_history: {
-        title: "История статусов",
-        date: "Дата",
-        from: "С",
-        to: "На",
-        comment: "Комментарий"
-      },
-      modal: {
-        title: "Обновить статус заказа",
-        status: "Статус",
-        tracking_number: "Номер отслеживания",
-        notes: "Заметки",
-        update: "Обновить"
-      },
-      messages: {
-        update_success: "Статус заказа успешно обновлен"
-      }
-    },
-    orders: {
-      statuses: {
-        pending: "В ожидании",
-        processing: "В обработке",
-        shipped: "Отправлено",
-        delivered: "Доставлено",
-        cancelled: "Отменено"
-      }
-    }
-  
-  
+  }
 }

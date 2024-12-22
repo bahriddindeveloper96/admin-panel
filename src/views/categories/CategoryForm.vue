@@ -1,17 +1,10 @@
 <template>
-  <div class="content">
+  <div class="category-form">
     <div class="content-header">
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0">{{ isEdit ? 'Edit Category' : 'Add Category' }}</h1>
-          </div>
-          <div class="col-sm-6">
-            <div class="float-sm-right">
-              <router-link to="/categories" class="btn btn-default">
-                <i class="fas fa-arrow-left"></i> Back to Categories
-              </router-link>
-            </div>
+            <h1>{{ isEdit ? $t('categories.edit_category') : $t('categories.add_category') }}</h1>
           </div>
         </div>
       </div>
@@ -21,137 +14,343 @@
       <div class="container-fluid">
         <div class="card">
           <div class="card-body">
-            <form @submit.prevent="handleSubmit">
-              <div class="row">
-                <div class="col-md-8">
-                  <!-- Slug -->
-                  <div class="form-group">
-                    <label>Slug</label>
-                    <input
-                      v-model="form.slug"
-                      type="text"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.slug }"
-                      placeholder="Enter category slug"
-                    >
-                    <div class="invalid-feedback">{{ errors.slug }}</div>
-                  </div>
+            <!-- Step Indicator -->
+            <div class="steps mb-4">
+              <div class="step" :class="{ active: currentStep === 1 }">
+                1. {{ $t('categories.basic_info') }}
+              </div>
+              <div class="step" :class="{ active: currentStep === 2 }">
+                2. {{ $t('categories.attributes') }}
+              </div>
+            </div>
 
-                  <!-- Translations -->
-                  <div class="form-group" v-for="locale in ['en', 'ru', 'uz']" :key="locale">
-                    <label>Name ({{ locale }})</label>
-                    <input
-                      v-model="form.translations[locale].name"
-                      type="text"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors[`translations.${locale}.name`] }"
-                      placeholder="Enter category name in {{ locale }}"
-                    >
-                    <div class="invalid-feedback">{{ errors[`translations.${locale}.name`] }}</div>
-
-                    <label>Description ({{ locale }})</label>
-                    <textarea
-                      v-model="form.translations[locale].description"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors[`translations.${locale}.description`] }"
-                      rows="3"
-                      placeholder="Enter category description in {{ locale }}"
-                    ></textarea>
-                    <div class="invalid-feedback">{{ errors[`translations.${locale}.description`] }}</div>
-                  </div>
-                </div>
-                
-                <div class="col-md-4">
-                  <!-- Settings -->
-                  <div class="form-group">
-                    <label>Status</label>
-                    <div class="custom-control custom-switch">
-                      <input
-                        type="checkbox"
-                        class="custom-control-input"
-                        id="activeSwitch"
-                        v-model="form.active"
-                      >
-                      <label class="custom-control-label" for="activeSwitch">
-                        {{ form.active ? 'Active' : 'Inactive' }}
-                      </label>
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Featured</label>
-                    <div class="custom-control custom-switch">
-                      <input
-                        type="checkbox"
-                        class="custom-control-input"
-                        id="featuredSwitch"
-                        v-model="form.featured"
-                      >
-                      <label class="custom-control-label" for="featuredSwitch">
-                        {{ form.featured ? 'Featured' : 'Not Featured' }}
-                      </label>
-                    </div>
-                  </div>
-                  <!-- Parent Category -->
+            <!-- Step 1: Basic Information -->
+            <div v-if="currentStep === 1">
+              <form @submit.prevent="submitBasicInfo">
                 <!-- Parent Category -->
-                <div class="form-group">
-                  <label>Parent Category</label>
-                  <select 
-                    v-model="form.parent_id" 
-                    class="form-control"
-                    @change="console.log('Selected parent:', form.parent_id)"
-                  >
-                    <option value="">Select Parent Category</option>
-                    <option
-                      v-for="category in categories"
-                      :key="category.id"
-                      :value="category.id"
-                      :disabled="isEdit && category.id === parseInt(route.params.id)"
+                <div class="form-group animated fadeIn">
+                  <label class="form-label">
+                    <i class="fas fa-sitemap text-primary"></i>
+                    {{ $t('categories.parent_category') }}
+                  </label>
+                  <div class="select-wrapper">
+                    <select 
+                      v-model="form.parent_id" 
+                      class="form-control custom-select"
                     >
-                      {{ category.translations?.en?.name || category.name || `Category ${category.id}` }}
-                    </option>
-                  </select>
-                  <div v-if="categories.length === 0" class="text-muted mt-1">
-                    Loading categories...
-                  </div>
-                </div>
-                  <!-- Image Upload -->
-                  <div class="form-group">
-                    <label>Category Image</label>
-                    <div class="custom-file">
-                      <input
-                        type="file"
-                        class="custom-file-input"
-                        :class="{ 'is-invalid': errors.image }"
-                        @change="handleImageChange"
-                        accept="image/*"
+                      <option :value="null">
+                        <i class="fas fa-folder"></i>
+                        {{ $t('categories.root_category') }}
+                      </option>
+                      <option 
+                        v-for="category in categories" 
+                        :key="category.id" 
+                        :value="category.id"
+                        :style="{ paddingLeft: getPaddingLeft(category.level) }"
                       >
-                      <label class="custom-file-label">
-                        {{ imageName || 'Choose image' }}
-                      </label>
-                      <div class="invalid-feedback">{{ errors.image }}</div>
+                        {{ getTranslationName(category) }}
+                      </option>
+                    </select>
+                    <div class="select-icon">
+                      <i class="fas fa-chevron-down"></i>
                     </div>
-                    <img 
-                      v-if="imagePreview" 
-                      :src="imagePreview" 
-                      class="mt-2 img-fluid"
-                      style="max-height: 200px"
-                    >
                   </div>
                 </div>
 
-                <div class="col-12 mt-4">
-                  <button 
-                    type="submit" 
-                    class="btn btn-primary"
-                    :disabled="loading"
+                <!-- Translations -->
+                <div class="translations-container">
+                  <div class="translations-tabs">
+                    <div 
+                      v-for="locale in ['uz', 'ru', 'en']" 
+                      :key="locale"
+                      class="tab-item"
+                      :class="{ active: activeLocale === locale }"
+                      @click="activeLocale = locale"
+                    >
+                      <div class="tab-icon">
+                        <i class="fas" :class="getLocaleIcon(locale)"></i>
+                      </div>
+                      <span class="tab-text">{{ locale.toUpperCase() }}</span>
+                    </div>
+                  </div>
+
+                  <div class="translations-content">
+                    <div 
+                      v-for="locale in ['uz', 'ru', 'en']" 
+                      :key="locale"
+                      class="translation-panel"
+                      :class="{ active: activeLocale === locale }"
+                    >
+                      <div class="panel-header">
+                        <h4 class="locale-title">
+                          <i class="fas" :class="getLocaleIcon(locale)"></i>
+                          {{ getLocaleName(locale) }}
+                        </h4>
+                      </div>
+                      
+                      <div class="panel-body">
+                        <div class="form-group animated fadeIn">
+                          <label class="form-label">
+                            <i class="fas fa-font text-primary"></i>
+                            {{ $t('common.name') }}
+                          </label>
+                          <div class="input-wrapper">
+                            <input 
+                              v-model="form.translations[locale].name"
+                              type="text"
+                              class="form-control"
+                              :placeholder="$t('categories.enter_name')"
+                              required
+                            >
+                            <div class="input-icon">
+                              <i class="fas fa-pen"></i>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="form-group animated fadeIn">
+                          <label class="form-label">
+                            <i class="fas fa-align-left text-primary"></i>
+                            {{ $t('common.description') }}
+                          </label>
+                          <div class="input-wrapper">
+                            <textarea
+                              v-model="form.translations[locale].description"
+                              class="form-control"
+                              :placeholder="$t('categories.enter_description')"
+                              rows="3"
+                            ></textarea>
+                            <div class="input-icon textarea-icon">
+                              <i class="fas fa-paragraph"></i>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="form-group">
+                  <label>{{ $t('common.image') }}</label>
+                  <input 
+                    v-model="form.image"
+                    type="text"
+                    class="form-control"
+                    :placeholder="$t('categories.image_path')"
                   >
-                    <i class="fas fa-spinner fa-spin mr-2" v-if="loading"></i>
-                    {{ isEdit ? 'Update' : 'Create' }} Category
+                </div>
+
+                <!-- Status and Order -->
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ $t('common.status.active') }}</label>
+                      <div class="custom-control custom-switch">
+                        <input 
+                          type="checkbox"
+                          class="custom-control-input"
+                          id="activeSwitch"
+                          v-model="form.active"
+                        >
+                        <label class="custom-control-label" for="activeSwitch">
+                          {{ form.active ? $t('common.active') : $t('common.inactive') }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ $t('common.featured') }}</label>
+                      <div class="custom-control custom-switch">
+                        <input 
+                          type="checkbox"
+                          class="custom-control-input"
+                          id="featuredSwitch"
+                          v-model="form.featured"
+                        >
+                        <label class="custom-control-label" for="featuredSwitch">
+                          {{ form.featured ? $t('common.featured') : $t('common.notFeatured') }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ $t('common.order') }}</label>
+                      <input 
+                        v-model.number="form.order"
+                        type="number"
+                        class="form-control"
+                        min="0"
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" @click="cancel">
+                    {{ $t('common.cancel') }}
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    {{ $t('common.next') }}
                   </button>
                 </div>
-              </div>
-            </form>
+              </form>
+            </div>
+
+            <!-- Step 2: Attributes -->
+            <div v-else-if="currentStep === 2">
+              <form @submit.prevent="submitAttributes" class="attributes-form">
+                <!-- Attribute Groups -->
+                <div class="attribute-groups">
+                  <div v-for="(group, groupIndex) in attributeForm.attribute_groups" 
+                       :key="groupIndex" 
+                       class="attribute-group-card animated fadeIn"
+                  >
+                    <!-- Group Header -->
+                    <div class="group-header">
+                      <div class="form-group mb-3">
+                        <label class="form-label">
+                          <i class="fas fa-layer-group text-primary"></i>
+                          {{ $t('categories.group_name') }}
+                        </label>
+                        <div class="input-wrapper">
+                          <input 
+                            v-model="group.name"
+                            type="text"
+                            class="form-control"
+                            required
+                          >
+                          <div class="input-icon">
+                            <i class="fas fa-tag"></i>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        type="button" 
+                        class="btn btn-icon btn-danger"
+                        @click="removeGroup(groupIndex)"
+                        title="Remove Group"
+                      >
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </div>
+
+                    <!-- Attributes List -->
+                    <div class="attributes-list">
+                      <div v-for="(attribute, attrIndex) in group.attributes" 
+                           :key="attrIndex" 
+                           class="attribute-card animated fadeIn"
+                      >
+                        <div class="attribute-header">
+                          <div class="form-group mb-3">
+                            <label class="form-label">
+                              <i class="fas fa-cube text-info"></i>
+                              {{ $t('common.name') }}
+                            </label>
+                            <div class="input-wrapper">
+                              <input 
+                                v-model="attribute.name"
+                                type="text"
+                                class="form-control"
+                                required
+                              >
+                              <div class="input-icon">
+                                <i class="fas fa-signature"></i>
+                              </div>
+                            </div>
+                          </div>
+
+                          <button 
+                            type="button" 
+                            class="btn btn-icon btn-danger"
+                            @click="removeAttribute(groupIndex, attrIndex)"
+                            title="Remove Attribute"
+                          >
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </div>
+
+                        <!-- Attribute Translations -->
+                        <div class="translations-tabs">
+                          <div 
+                            v-for="locale in ['uz', 'ru', 'en']" 
+                            :key="locale"
+                            class="tab-item"
+                            :class="{ active: activeLocales[groupIndex]?.[attrIndex] === locale }"
+                            @click="setActiveLocale(groupIndex, attrIndex, locale)"
+                          >
+                            <i class="fas" :class="getLocaleIcon(locale)"></i>
+                            <span>{{ locale.toUpperCase() }}</span>
+                          </div>
+                        </div>
+
+                        <div class="translations-content">
+                          <div 
+                            v-for="locale in ['uz', 'ru', 'en']" 
+                            :key="locale"
+                            class="translation-panel"
+                            :class="{ active: activeLocales[groupIndex]?.[attrIndex] === locale }"
+                          >
+                            <div class="form-group">
+                              <label class="form-label">
+                                <i class="fas fa-language text-primary"></i>
+                                {{ $t('common.name') }} ({{ locale }})
+                              </label>
+                              <div class="input-wrapper">
+                                <input 
+                                  v-model="attribute.translations[locale].name"
+                                  type="text"
+                                  class="form-control"
+                                  required
+                                >
+                                <div class="input-icon">
+                                  <i class="fas fa-pen"></i>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Add Attribute Button -->
+                      <button 
+                        type="button" 
+                        class="btn btn-add"
+                        @click="addAttribute(groupIndex)"
+                      >
+                        <i class="fas fa-plus-circle"></i>
+                        {{ $t('categories.add_attribute') }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Add Group Button -->
+                <button 
+                  type="button" 
+                  class="btn btn-add btn-lg mb-4"
+                  @click="addGroup"
+                >
+                  <i class="fas fa-plus-circle"></i>
+                  {{ $t('categories.add_group') }}
+                </button>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" @click="currentStep = 1">
+                    <i class="fas fa-arrow-left"></i>
+                    {{ $t('common.back') }}
+                  </button>
+                  <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i>
+                    {{ $t('common.save') }}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -160,266 +359,604 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watchEffect } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { useRoute, useRouter } from 'vue-router'
-import Swal from 'sweetalert2'
 import axios from 'axios'
 
 export default {
   name: 'CategoryForm',
-
   setup() {
-    const store = useStore()
-    const route = useRoute()
     const router = useRouter()
-    
-    const loading = ref(false)
-    const errors = ref({})
-    const imageFile = ref(null)
-    const imagePreview = ref(null)
+    const store = useStore()
+    const currentStep = ref(1)
+    const isEdit = ref(false)
+    const createdCategoryId = ref(null)
 
-    const isEdit = computed(() => !!route.params.id)
-
-    const form = ref({
-      slug: '',
+    // Form for basic information
+    const form = reactive({
+      translations: {
+        uz: { name: '', description: '' },
+        ru: { name: '', description: '' },
+        en: { name: '', description: '' }
+      },
+      parent_id: null,
+      image: '',
       active: true,
       featured: false,
-      parent_id: '', // Make sure parent_id is initialized
-      translations: {
-        en: { name: '', description: '' },
-        ru: { name: '', description: '' },
-        uz: { name: '', description: '' }
-      }
+      order: 0
+    })
+
+    // Form for attributes
+    const attributeForm = reactive({
+      attribute_groups: [
+        {
+          name: '',
+          attributes: [
+            {
+              name: '',
+              translations: {
+                uz: { name: '' },
+                ru: { name: '' },
+                en: { name: '' }
+              }
+            }
+          ]
+        }
+      ]
     })
 
     const categories = ref([])
 
+    const activeLocale = ref('uz')
+    const activeLocales = ref({})
+
     const fetchCategories = async () => {
       try {
-        console.log('Fetching categories...')
-        const response = await axios.get("/admin/categories")
-        console.log('Raw response:', response)
-        console.log('Response data:', response.data)
-        
-        // API response strukturasiga qarab ma'lumotlarni olish
-        let fetchedCategories = []
-        if (response.data.data) {
-          fetchedCategories = response.data.data
-        } else if (Array.isArray(response.data)) {
-          fetchedCategories = response.data
+        const response = await axios.get('/admin/categories')
+        if (Array.isArray(response.data)) {
+          categories.value = response.data
+        } else if (response.data.data) {
+          categories.value = response.data.data
         }
-        
-        console.log('Processed categories:', fetchedCategories)
-        categories.value = fetchedCategories.filter(cat => 
-          cat && cat.id && (!isEdit.value || cat.id !== parseInt(route.params.id))
-        )
-        console.log('Final categories state:', categories.value)
       } catch (error) {
-        console.error("Error fetching categories:", error)
-        if (error.response) {
-          console.error("Error response:", error.response.data)
-        }
+        console.error('Error fetching categories:', error)
       }
     }
 
-    watchEffect(() => {
-      console.log('Current categories:', categories.value)
-    })
-
-    onMounted(async () => {
-      await fetchCategories()
-      if (isEdit.value) {
-        await loadCategory()
-      }
-    })
-
-    const imageName = computed(() => {
-      return imageFile.value?.name || 'Choose image'
-    })
-
-    const handleImageChange = (event) => {
-      const file = event.target.files[0]
-      if (!file) return
-
-      // Faqat rasm fayllarini qabul qilish
-      if (!file.type.startsWith('image/')) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Please select an image file'
-        })
-        return
-      }
-
-      imageFile.value = file
-      imagePreview.value = URL.createObjectURL(file)
-    }
-
-    const loadCategory = async () => {
-      if (!isEdit.value) return
-
+    const submitBasicInfo = async () => {
       try {
-        loading.value = true
-        const response = await axios.get(`/admin/categories/${route.params.id}`)
-        const category = response.data.data
-
-        form.value = {
-          slug: category.slug,
-          active: category.active,
-          featured: category.featured,
-          parent_id: category.parent_id, // Update parent_id
-          translations: category.translations
-        }
-
-        if (category.image_url) {
-          imagePreview.value = category.image_url
-        }
+        const response = await axios.post('/admin/categories', form)
+        createdCategoryId.value = response.data.category.id
+        currentStep.value = 2
       } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to load category'
+        console.error('Error creating category:', error)
+        alert(error.response?.data?.message || 'Error creating category')
+      }
+    }
+
+    const submitAttributes = async () => {
+      try {
+        // Format the data to match the API requirements
+        const formattedData = {
+          attribute_groups: attributeForm.attribute_groups.map(group => ({
+            name: group.name,
+            attributes: group.attributes.map(attr => ({
+              name: attr.name,
+              translations: attr.translations
+            }))
+          }))
+        }
+
+        // Send the formatted data to the API
+        await axios.post(`/admin/categories/${createdCategoryId.value}/attributes`, formattedData)
+        
+        // Show success message
+        store.dispatch('showMessage', {
+          type: 'success',
+          text: 'Category attributes saved successfully'
         })
+        
+        // Redirect to categories list
         router.push('/categories')
-      } finally {
-        loading.value = false
+      } catch (error) {
+        console.error('Error adding attributes:', error)
+        // Show error message
+        store.dispatch('showMessage', {
+          type: 'error',
+          text: error.response?.data?.message || 'Error adding attributes'
+        })
       }
     }
 
-    const handleSubmit = async () => {
-      try {
-        loading.value = true;
-        errors.value = {};
-
-        // Format translations data
-        const translations = {};
-        Object.entries(form.value.translations).forEach(([locale, data]) => {
-          translations[locale] = {
-            name: data.name || '',
-            description: data.description || ''
-          };
-        });
-
-        // Create request data
-        const requestData = {
-          slug: form.value.slug,
-          active: form.value.active ? 1 : 0,
-          featured: form.value.featured ? 1 : 0,
-          translations: translations
-        };
-
-        // Only add parent_id if it has a value
-        if (form.value.parent_id) {
-          requestData.parent_id = parseInt(form.value.parent_id);
-        }
-
-        console.log('Request data:', requestData);
-
-        const url = isEdit.value 
-          ? `/admin/categories/${route.params.id}`
-          : `/admin/categories`;
-
-        let response;
-        
-        // If we have an image, use FormData
-        if (imageFile.value) {
-          const formData = new FormData();
-          
-          // Append each field separately
-          formData.append('slug', requestData.slug);
-          formData.append('active', requestData.active);
-          formData.append('featured', requestData.featured);
-          
-          // Append translations
-          Object.entries(translations).forEach(([locale, data]) => {
-            formData.append(`translations[${locale}][name]`, data.name);
-            formData.append(`translations[${locale}][description]`, data.description);
-          });
-
-          // Append parent_id if exists
-          if (requestData.parent_id) {
-            formData.append('parent_id', requestData.parent_id);
+    const addGroup = () => {
+      attributeForm.attribute_groups.push({
+        name: '',
+        attributes: [
+          {
+            name: '',
+            translations: {
+              uz: { name: '' },
+              ru: { name: '' },
+              en: { name: '' }
+            }
           }
-          
-          // Append image
-          formData.append('image', imageFile.value);
+        ]
+      })
+    }
 
-          response = await axios[isEdit.value ? 'put' : 'post'](url, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Accept': 'application/json'
-            }
-          });
-        } else {
-          // If no image, send JSON directly
-          response = await axios[isEdit.value ? 'put' : 'post'](url, requestData, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            }
-          });
+    const removeGroup = (groupIndex) => {
+      attributeForm.attribute_groups.splice(groupIndex, 1)
+    }
+
+    const addAttribute = (groupIndex) => {
+      attributeForm.attribute_groups[groupIndex].attributes.push({
+        name: '',
+        translations: {
+          uz: { name: '' },
+          ru: { name: '' },
+          en: { name: '' }
         }
+      })
+    }
 
-        console.log('Response:', response.data);
+    const removeAttribute = (groupIndex, attrIndex) => {
+      attributeForm.attribute_groups[groupIndex].attributes.splice(attrIndex, 1)
+    }
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Success',
-          text: 'Category has been saved successfully'
-        });
+    const cancel = () => {
+      router.push('/categories')
+    }
 
-        router.push('/categories');
-      } catch (error) {
-        console.error('Error details:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          requestData: error.config?.data
-        });
-        
-        if (error.response?.status === 422) {
-          errors.value = error.response.data.errors;
-          const errorMessages = Object.values(error.response.data.errors).flat();
-          Swal.fire({
-            icon: 'error',
-            title: 'Validation Error',
-            text: errorMessages[0]
-          });
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.response?.data?.message || 'Failed to save category'
-          });
-        }
-      } finally {
-        loading.value = false;
+    const getTranslationName = (category) => {
+      if (!category.translations) return category.name || `Category ${category.id}`
+      const translation = category.translations.find(t => t.locale === 'uz') || 
+                         category.translations.find(t => t.locale === 'en') ||
+                         category.translations.find(t => t.locale === 'ru')
+      return translation ? translation.name : category.name || `Category ${category.id}`
+    }
+
+    const getLocaleIcon = (locale) => {
+      switch(locale) {
+        case 'uz': return 'fa-flag text-success'
+        case 'ru': return 'fa-flag text-danger'
+        case 'en': return 'fa-flag text-primary'
+        default: return 'fa-flag'
       }
-    };
+    }
+
+    const getLocaleName = (locale) => {
+      switch(locale) {
+        case 'uz': return 'O\'zbekcha'
+        case 'ru': return 'Русский'
+        case 'en': return 'English'
+        default: return locale
+      }
+    }
+
+    const getPaddingLeft = (level) => {
+      return `${level * 20}px`
+    }
+
+    const setActiveLocale = (groupIndex, attrIndex, locale) => {
+      if (!activeLocales.value[groupIndex]) {
+        activeLocales.value[groupIndex] = {}
+      }
+      activeLocales.value[groupIndex][attrIndex] = locale
+    }
+
+    onMounted(fetchCategories)
 
     return {
-      form,
-      loading,
-      errors,
+      currentStep,
       isEdit,
-      categories, 
-      imagePreview,
-      imageName,
-      handleImageChange,
-      handleSubmit
+      form,
+      attributeForm,
+      categories,
+      submitBasicInfo,
+      submitAttributes,
+      addGroup,
+      removeGroup,
+      addAttribute,
+      removeAttribute,
+      cancel,
+      getTranslationName,
+      activeLocale,
+      getLocaleIcon,
+      getLocaleName,
+      getPaddingLeft,
+      activeLocales,
+      setActiveLocale
     }
   }
 }
 </script>
 
 <style scoped>
-.custom-file-input:lang(en)~.custom-file-label::after {
-  content: "Browse";
+.category-form {
+  padding: 20px;
 }
-.img-preview {
-  max-width: 100%;
-  height: auto;
-  margin-top: 1rem;
+
+.steps {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.step {
+  padding: 10px 20px;
+  border-radius: 4px;
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+.step.active {
+  background: #007bff;
+  color: white;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.translations-container {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.translations-tabs {
+  display: flex;
+  background: #f8f9fa;
+  padding: 0.5rem;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+  border: 1px solid #e9ecef;
+}
+
+.tab-item:hover {
+  background: #f8f9fa;
+  transform: translateY(-1px);
+}
+
+.tab-item.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+}
+
+.tab-icon {
+  margin-right: 0.5rem;
+  font-size: 1.1em;
+}
+
+.tab-text {
+  font-weight: 500;
+}
+
+.translation-panel {
+  display: none;
+  padding: 1.5rem;
+}
+
+.translation-panel.active {
+  display: block;
+  animation: slideIn 0.3s ease-out;
+}
+
+.panel-header {
+  margin-bottom: 1.5rem;
+}
+
+.locale-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.textarea-icon {
+  top: 1.2rem;
+  transform: none;
+}
+
+.form-control {
+  padding-right: 2.5rem;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.1);
+}
+
+.form-control:focus + .input-icon {
+  color: #007bff;
+  opacity: 1;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.custom-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 2.5rem;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.custom-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.1);
+}
+
+.custom-select:focus + .select-icon {
+  color: #007bff;
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.custom-select option {
+  padding: 10px;
+  background: #fff;
+  color: #2c3e50;
+}
+
+.attributes-form {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.attribute-group-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #e9ecef;
+}
+
+.group-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.attribute-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.attribute-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.attribute-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.btn-icon {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+}
+
+.btn-add {
+  background: #e9ecef;
+  color: #495057;
+  border: 2px dashed #ced4da;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.btn-add:hover {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.btn-add i {
+  margin-right: 0.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.form-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .translations-container {
+    background: #2d2d2d;
+  }
+
+  .translations-tabs {
+    background: #1a1a1a;
+    border-bottom-color: #404040;
+  }
+
+  .tab-item {
+    background: #333;
+    border-color: #404040;
+    color: #fff;
+  }
+
+  .tab-item:hover {
+    background: #404040;
+  }
+
+  .locale-title {
+    color: #fff;
+  }
+
+  .form-control {
+    background-color: #333;
+    border-color: #404040;
+    color: #fff;
+  }
+
+  .form-control:focus {
+    border-color: #007bff;
+    background-color: #404040;
+  }
+
+  .form-label {
+    color: #e9ecef;
+  }
+
+  .custom-select {
+    background: #333;
+    border-color: #404040;
+    color: #fff;
+  }
+
+  .custom-select option {
+    background: #333;
+    color: #fff;
+  }
+
+  .select-icon {
+    color: #adb5bd;
+  }
+
+  .attribute-group-card {
+    background: #2d2d2d;
+    border-color: #404040;
+  }
+
+  .attribute-card {
+    background: #333;
+  }
+
+  .btn-add {
+    background: #404040;
+    border-color: #495057;
+    color: #fff;
+  }
+
+  .btn-add:hover {
+    background: #007bff;
+    border-color: #007bff;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animated {
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+}
+
+.fadeIn {
+  animation-name: fadeIn;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
