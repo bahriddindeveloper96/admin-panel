@@ -555,52 +555,96 @@ export default {
     }
 
     // Handle image upload
+    // const handleImageUpload = async (event, variantIndex) => {
+    //   const files = event.target.files
+    //   if (!files.length) return
+
+    //   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+    //   const maxSize = 2 * 1024 * 1024 // 2MB as per backend validation
+
+    //   // Validate file
+    //   const file = files[0]
+    //   if (!allowedTypes.includes(file.type)) {
+    //     showNotification('Ruxsat etilgan formatlar: JPG, PNG, GIF', true)
+    //     return
+    //   }
+    //   if (file.size > maxSize) {
+    //     showNotification('Rasm hajmi 2MB dan oshmasligi kerak', true)
+    //     return
+    //   }
+
+    //   try {
+    //     isUploading.value = true
+    //     const formData = new FormData()
+    //     formData.append('images[]', file) // Changed to match backend expectation
+
+        
+
+    //     if (response.data && response.data.success && response.data.paths && response.data.paths.length > 0) {
+    //       variantForm.variants[variantIndex].images.push(response.data.paths[0])
+    //       showNotification('Rasm muvaffaqiyatli yuklandi')
+    //     } else {
+    //       throw new Error('Server javobida xatolik')
+    //     }
+    //   } catch (error) {
+    //     console.error('Image upload error:', error.response || error)
+    //     const errorMessage = error.response?.data?.errors?.images?.[0] || 'Rasmni yuklashda xatolik yuz berdi'
+    //     showNotification(errorMessage, true)
+    //   } finally {
+    //     isUploading.value = false
+    //     // Reset file input
+    //     event.target.value = ''
+    //   }
+    // }
+   
+    // Handle image upload
     const handleImageUpload = async (event, variantIndex) => {
-      const files = event.target.files
-      if (!files.length) return
+      const files = event.target.files;
+      if (!files.length) return;
 
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
-      const maxSize = 2 * 1024 * 1024 // 2MB as per backend validation
-
-      // Validate file
-      const file = files[0]
-      if (!allowedTypes.includes(file.type)) {
-        showNotification('Ruxsat etilgan formatlar: JPG, PNG, GIF', true)
-        return
-      }
-      if (file.size > maxSize) {
-        showNotification('Rasm hajmi 2MB dan oshmasligi kerak', true)
-        return
-      }
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      const maxSize = 2 * 1024 * 1024; // 2MB as per backend validation
 
       try {
-        isUploading.value = true
-        const formData = new FormData()
-        formData.append('images[]', file) // Changed to match backend expectation
+        isUploading.value = true;
 
-        const response = await axios.post('/admin/products/upload-images', formData, {
-          headers: { 
-            'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json'
-          }
-        })
-
-        if (response.data && response.data.success && response.data.paths && response.data.paths.length > 0) {
-          variantForm.variants[variantIndex].images.push(response.data.paths[0])
-          showNotification('Rasm muvaffaqiyatli yuklandi')
-        } else {
-          throw new Error('Server javobida xatolik')
+        // Initialize images array if not exists
+        if (!variantForm.variants[variantIndex].images) {
+          variantForm.variants[variantIndex].images = [];
         }
+
+        // Process each file
+        Array.from(files).forEach(file => {
+          // Validate file
+          if (!allowedTypes.includes(file.type)) {
+            showNotification('Ruxsat etilgan formatlar: JPG, PNG, GIF', true);
+            return;
+          }
+          if (file.size > maxSize) {
+            showNotification('Rasm hajmi 2MB dan oshmasligi kerak', true);
+            return;
+          }
+
+          // Create temporary URL for preview
+          const tempUrl = URL.createObjectURL(file);
+          // Store both file and temp URL
+          variantForm.variants[variantIndex].images.push({
+            file: file,
+            preview: tempUrl
+          });
+        });
+
+        showNotification('Rasmlar qo\'shildi');
       } catch (error) {
-        console.error('Image upload error:', error.response || error)
-        const errorMessage = error.response?.data?.errors?.images?.[0] || 'Rasmni yuklashda xatolik yuz berdi'
-        showNotification(errorMessage, true)
+        console.error('Image handling error:', error);
+        showNotification('Rasmni yuklashda xatolik yuz berdi', true);
       } finally {
-        isUploading.value = false
+        isUploading.value = false;
         // Reset file input
-        event.target.value = ''
+        event.target.value = '';
       }
-    }
+    };
+
 
     // Remove image from variant
     const removeImage = (variantIndex, imageIndex) => {
