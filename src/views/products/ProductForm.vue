@@ -529,15 +529,15 @@ export default {
     }
 
     // Step 3: Submit variants
-    const submitVariants = async () => {
-      try {
-        await axios.post(`/admin/products/${productId.value}/variants`, variantForm)
-        showNotification(t('products.product_created'))
-        router.push('/products')
-      } catch (error) {
-        showNotification(error.response?.data?.message || t('common.error_saving'), true)
-      }
-    }
+    // const submitVariants = async () => {
+    //   try {
+    //     await axios.post(`/admin/products/${productId.value}/variants`, variantForm)
+    //     showNotification(t('products.product_created'))
+    //     router.push('/products')
+    //   } catch (error) {
+    //     showNotification(error.response?.data?.message || t('common.error_saving'), true)
+    //   }
+    // }
 
     // Add new variant
     const addVariant = () => {
@@ -554,96 +554,172 @@ export default {
       variantForm.variants.splice(index, 1)
     }
 
+    
+   
+    
+    
+    
+    // Get full image URL
+    // const getImageUrl = (path) => {
+    //   const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    //   return path.startsWith('http') ? path : `${baseUrl}${path}`;
+    // };
+
     // Handle image upload
     // const handleImageUpload = async (event, variantIndex) => {
-    //   const files = event.target.files
-    //   if (!files.length) return
+    //   const files = event.target.files;
+    //   if (!files.length) return;
 
-    //   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
-    //   const maxSize = 2 * 1024 * 1024 // 2MB as per backend validation
-
-    //   // Validate file
-    //   const file = files[0]
-    //   if (!allowedTypes.includes(file.type)) {
-    //     showNotification('Ruxsat etilgan formatlar: JPG, PNG, GIF', true)
-    //     return
-    //   }
-    //   if (file.size > maxSize) {
-    //     showNotification('Rasm hajmi 2MB dan oshmasligi kerak', true)
-    //     return
-    //   }
+    //   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    //   const maxSize = 2 * 1024 * 1024; // 2MB as per backend validation
 
     //   try {
-    //     isUploading.value = true
-    //     const formData = new FormData()
-    //     formData.append('images[]', file) // Changed to match backend expectation
+    //     isUploading.value = true;
 
-        
+    //     // Validate file
+    //     const file = files[0];
+    //     if (!allowedTypes.includes(file.type)) {
+    //       showNotification('Ruxsat etilgan formatlar: JPG, PNG, WEBP', true);
+    //       return;
+    //     }
+    //     if (file.size > maxSize) {
+    //       showNotification('Rasm hajmi 2MB dan oshmasligi kerak', true);
+    //       return;
+    //     }
+
+    //     // Upload image first
+    //     const formData = new FormData();
+    //     formData.append('images[]', file);
+
+    //     const response = await axios.post('/admin/products/upload-images', formData, {
+    //       headers: {
+    //         'Content-Type': 'multipart/form-data'
+    //       }
+    //     });
 
     //     if (response.data && response.data.success && response.data.paths && response.data.paths.length > 0) {
-    //       variantForm.variants[variantIndex].images.push(response.data.paths[0])
-    //       showNotification('Rasm muvaffaqiyatli yuklandi')
+    //       // Store the image path returned from server
+    //       if (!variantForm.variants[variantIndex].images) {
+    //         variantForm.variants[variantIndex].images = [];
+    //       }
+    //       variantForm.variants[variantIndex].images.push(response.data.paths[0]);
+    //       showNotification('Rasm muvaffaqiyatli yuklandi');
     //     } else {
-    //       throw new Error('Server javobida xatolik')
+    //       throw new Error('Server javobida xatolik');
     //     }
     //   } catch (error) {
-    //     console.error('Image upload error:', error.response || error)
-    //     const errorMessage = error.response?.data?.errors?.images?.[0] || 'Rasmni yuklashda xatolik yuz berdi'
-    //     showNotification(errorMessage, true)
+    //     console.error('Image upload error:', error.response || error);
+    //     const errorMessage = error.response?.data?.errors?.images?.[0] || 'Rasmni yuklashda xatolik yuz berdi';
+    //     showNotification(errorMessage, true);
     //   } finally {
-    //     isUploading.value = false
+    //     isUploading.value = false;
     //     // Reset file input
-    //     event.target.value = ''
+    //     event.target.value = '';
     //   }
-    // }
-   
+    // };
+
+
+    // Submit variants
+    // const submitVariants = async () => {
+    //   try {
+    //     // Prepare variants data with image paths
+    //     const variantsData = {
+    //       variants: variantForm.variants.map(variant => ({
+    //         price: variant.price,
+    //         stock: variant.stock,
+    //         attribute_values: variant.attribute_values,
+    //         images: variant.images // Image paths are already stored in the correct format
+    //       }))
+    //     };
+
+    //     await axios.post(`/admin/products/${productId.value}/variants`, variantsData);
+    //     showNotification(t('products.product_created'));
+    //     router.push('/products');
+    //   } catch (error) {
+    //     showNotification(error.response?.data?.message || t('common.error_saving'), true);
+    //   }
+    // };
+
+    
     // Handle image upload
     const handleImageUpload = async (event, variantIndex) => {
       const files = event.target.files;
       if (!files.length) return;
 
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
       const maxSize = 2 * 1024 * 1024; // 2MB as per backend validation
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
       try {
         isUploading.value = true;
 
-        // Initialize images array if not exists
-        if (!variantForm.variants[variantIndex].images) {
-          variantForm.variants[variantIndex].images = [];
+        // Validate file
+        const file = files[0];
+        if (!allowedTypes.includes(file.type)) {
+          showNotification('Ruxsat etilgan formatlar: JPG, PNG, WEBP', true);
+          return;
+        }
+        if (file.size > maxSize) {
+          showNotification('Rasm hajmi 2MB dan oshmasligi kerak', true);
+          return;
         }
 
-        // Process each file
-        Array.from(files).forEach(file => {
-          // Validate file
-          if (!allowedTypes.includes(file.type)) {
-            showNotification('Ruxsat etilgan formatlar: JPG, PNG, GIF', true);
-            return;
-          }
-          if (file.size > maxSize) {
-            showNotification('Rasm hajmi 2MB dan oshmasligi kerak', true);
-            return;
-          }
+        // Upload image first
+        const formData = new FormData();
+        formData.append('images[]', file);
 
-          // Create temporary URL for preview
-          const tempUrl = URL.createObjectURL(file);
-          // Store both file and temp URL
-          variantForm.variants[variantIndex].images.push({
-            file: file,
-            preview: tempUrl
-          });
+        const response = await axios.post('/admin/products/upload-images', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
         });
 
-        showNotification('Rasmlar qo\'shildi');
+        if (response.data && response.data.success && response.data.paths && response.data.paths.length > 0) {
+          // Store the image path returned from server with full URL
+          if (!variantForm.variants[variantIndex].images) {
+            variantForm.variants[variantIndex].images = [];
+          }
+          const imagePath = response.data.paths[0];
+          const fullImageUrl = `${baseUrl}${imagePath}`;
+          variantForm.variants[variantIndex].images.push(fullImageUrl);
+          showNotification('Rasm muvaffaqiyatli yuklandi');
+        } else {
+          throw new Error('Server javobida xatolik');
+        }
       } catch (error) {
-        console.error('Image handling error:', error);
-        showNotification('Rasmni yuklashda xatolik yuz berdi', true);
+        console.error('Image upload error:', error.response || error);
+        const errorMessage = error.response?.data?.errors?.images?.[0] || 'Rasmni yuklashda xatolik yuz berdi';
+        showNotification(errorMessage, true);
       } finally {
         isUploading.value = false;
         // Reset file input
         event.target.value = '';
       }
     };
+
+    // Submit variants
+    const submitVariants = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        // Prepare variants data with relative image paths
+        const variantsData = {
+          variants: variantForm.variants.map(variant => ({
+            price: variant.price,
+            stock: variant.stock,
+            attribute_values: variant.attribute_values,
+            // Convert full URLs back to relative paths for submission
+            images: variant.images.map(image => image.replace(baseUrl, ''))
+          }))
+        };
+
+        await axios.post(`/admin/products/${productId.value}/variants`, variantsData);
+        showNotification(t('products.product_created'));
+        router.push('/products');
+      } catch (error) {
+        showNotification(error.response?.data?.message || t('common.error_saving'), true);
+      }
+    };
+
 
 
     // Remove image from variant
