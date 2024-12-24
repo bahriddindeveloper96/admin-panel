@@ -8,6 +8,31 @@ export default {
     reports: 'Hisobotlar',
     categories: 'Kategoriyalar'
   },
+  products: {
+    "basic_info": "Asosiy Ma'lumot",
+    "variants": "Variantlar",
+    "sku": "SKU",
+    "attributes": "Atributlar",
+    "delete_confirm_title": "Mahsulotni O'chirish",
+    "delete_confirm_text": "Haqiqatan ham bu mahsulotni o'chirmoqchimisiz?",
+    "delete_success": "Mahsulot muvaffaqiyatli o'chirildi",
+    "delete_error": "Mahsulotni o'chirishda xatolik yuz berdi",
+    "title": "Mahsulotlar",
+    "add_product": "Mahsulot qo'shish",
+    "edit_product": "Mahsulotni tahrirlash",
+    "name": "Nomi",
+    "category": "Kategoriya",
+    "price": "Narxi",
+    "stock": "Ombor",
+    "description": "Tavsif",
+    "images": "Rasmlar",
+    "featured": "Tavsiya etilgan",
+    "rating": "Reyting",
+    "favorites": "Sevimlilar",
+    "uncategorized": "Kategoriyasiz",
+    "no_products": "Mahsulotlar topilmadi",
+    "search_placeholder": "Mahsulotlarni qidirish..."
+  },
   auth: {
     login: 'Kirish',
     logout: 'Chiqish',
@@ -54,21 +79,6 @@ export default {
     no: 'Yo\'q',
     order: 'Tartib',
     slug: 'URL manzil'
-  },
-  products: {
-    title: 'Mahsulotlar',
-    add_product: 'Mahsulot qo\'shish',
-    search_placeholder: 'Mahsulotlarni qidirish...',
-    no_products: 'Mahsulotlar topilmadi',
-    uncategorized: 'Kategoriyasiz',
-    table: {
-      image: 'Rasm',
-      name: 'Nomi',
-      category: 'Kategoriya',
-      price: 'Narxi',
-      stock: 'Ombor',
-      status: 'Holati'
-    }
   },
   dashboard: {
     new_orders: 'Yangi buyurtmalar',

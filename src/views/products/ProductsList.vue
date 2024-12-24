@@ -1,210 +1,199 @@
 <template>
   <div class="content">
-    <div class="content">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-sm-6">
-            <h1 class="m-0">{{ $t("products.title") }}</h1>
-          </div>
-          <div class="col-sm-6">
-            <div class="float-sm-right">
-              <router-link to="/products/create" class="btn btn-primary">
-                <i class="fas fa-plus"></i> {{ $t("products.add_product") }}
-              </router-link>
-            </div>
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">{{ $t("products.title") }}</h1>
+        </div>
+        <div class="col-sm-6">
+          <div class="float-sm-right">
+            <router-link to="/products/create" class="btn btn-primary">
+              <i class="fas fa-plus"></i> {{ $t("products.add_product") }}
+            </router-link>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="content">
-      <div class="container-fluid">
-        <div class="card">
-          <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="d-flex gap-3">
-                <button
-                  class="btn btn-danger d-flex align-items-center gap-2"
-                  :disabled="!selectedProducts.length || isLoading"
-                  @click="deleteSelected"
-                >
-                  <i class="fas fa-trash"></i>
-                  <span>{{ $t("common.delete_selected") }}</span>
-                </button>
-                <button
-                  class="btn btn-success d-flex align-items-center gap-2"
-                  :disabled="isLoading"
-                  @click="exportProducts"
-                >
-                  <i class="fas fa-file-export"></i>
-                  <span>{{ $t("common.export") }}</span>
-                </button>
-              </div>
-              <div class="search-box">
-                <i class="fas fa-search search-icon"></i>
-                <input
-                  type="text"
-                  class="form-control search-input"
-                  :placeholder="$t('products.search_placeholder')"
-                  v-model="filters.search"
-                  @input="handleSearch"
-                  :disabled="isLoading"
-                />
-              </div>
+    <div class="container-fluid">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-3">
+              <button
+                class="btn btn-danger d-flex align-items-center gap-2"
+                :disabled="!selectedProducts.length || isLoading"
+                @click="deleteSelected"
+              >
+                <i class="fas fa-trash"></i>
+                <span>{{ $t("common.delete_selected") }}</span>
+              </button>
+              <button
+                class="btn btn-success d-flex align-items-center gap-2"
+                :disabled="isLoading"
+                @click="exportProducts"
+              >
+                <i class="fas fa-file-export"></i>
+                <span>{{ $t("common.export") }}</span>
+              </button>
+            </div>
+            <div class="search-box">
+              <i class="fas fa-search search-icon"></i>
+              <input
+                type="text"
+                class="form-control search-input"
+                :placeholder="$t('products.search_placeholder')"
+                v-model="filters.search"
+                @input="handleSearch"
+                :disabled="isLoading"
+              />
             </div>
           </div>
+        </div>
 
-          <div class="card-body table-responsive">
-            <table class="table">
-              <thead>
+        <div class="card-body table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="text-center">
+                  <input
+                    type="checkbox"
+                    class="custom-checkbox"
+                    :checked="isAllSelected"
+                    @change="toggleSelectAll"
+                    :disabled="isLoading"
+                  />
+                </th>
+                <th>{{ $t("products.image") }}</th>
+                <th>{{ $t("products.name") }}</th>
+                <th>{{ $t("products.category") }}</th>
+                <th>{{ $t("products.price") }}</th>
+                <th>{{ $t("products.stock") }}</th>
+                <th>{{ $t("common.status") }}</th>
+                <th class="text-center">{{ $t("common.actions") }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-if="isLoading">
                 <tr>
-                  <th class="text-center">
+                  <td colspan="8">
+                    <div class="d-flex justify-content-center py-5">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+              <template v-else>
+                <tr v-for="product in products.data" :key="product.id">
+                  <td class="text-center">
                     <input
                       type="checkbox"
                       class="custom-checkbox"
-                      :checked="isAllSelected"
-                      @change="toggleSelectAll"
-                      :disabled="isLoading"
+                      :value="product.id"
+                      v-model="selectedProducts"
                     />
-                  </th>
-                  <th>{{ $t("products.table.image") }}</th>
-                  <th>{{ $t("products.table.name") }}</th>
-                  <th>{{ $t("products.table.category") }}</th>
-                  <th>{{ $t("products.table.price") }}</th>
-                  <th>{{ $t("products.table.stock") }}</th>
-                  <th>{{ $t("products.table.status") }}</th>
-                  <th class="text-center">{{ $t("common.actions") }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-if="isLoading">
-                  <tr>
-                    <td colspan="8">
-                      <div
-                        class="d-flex justify-content-center align-items-center py-5"
-                      >
-                        <div class="spinner-border" role="status">
-                          <span class="sr-only">{{
-                            $t("common.loading")
-                          }}</span>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else-if="!products.data.length">
-                  <tr>
-                    <td colspan="8">
-                      <div class="empty-state">
-                        <i class="fas fa-box-open"></i>
-                        <p class="mb-0">{{ $t("products.no_products") }}</p>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else>
-                  <tr v-for="product in products.data" :key="product.id">
-                    <td class="text-center">
-                      <input
-                        type="checkbox"
-                        class="custom-checkbox"
-                        :value="product.id"
-                        v-model="selectedProducts"
-                      />
-                    </td>
-                    <td>
-                      <div class="variants-container">
-                        <div class="variant-images">
-                          <div class="image-container">
-                            <img
-                              v-if="product.images && product.images.length > 0"
-                              :src="product.images[currentImageIndex[product.id]]?.image"
-                              :alt="product.name"
-                              class="slider-image"
-                              @error="handleImageError"
-                            />
-                            <div class="image-controls">
-                              <button class="nav-btn prev" @click="prevImage(product.id)">
-                                <i class="fas fa-chevron-left"></i>
-                              </button>
-                              <button class="nav-btn next" @click="nextImage(product.id)">
-                                <i class="fas fa-chevron-right"></i>
-                              </button>
-                            </div>
+                  </td>
+                  <td>
+                    <div class="variants-container">
+                      <div class="variant-images">
+                        <div class="image-container">
+                          <img
+                            v-if="product.images && product.images.length > 0"
+                            :src="product.images[currentImageIndex[product.id]]?.image"
+                            :alt="product.name"
+                            class="slider-image"
+                            @error="handleImageError"
+                          />
+                          <div class="image-controls">
+                            <button class="nav-btn prev" @click="prevImage(product.id)">
+                              <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="nav-btn next" @click="nextImage(product.id)">
+                              <i class="fas fa-chevron-right"></i>
+                            </button>
                           </div>
                         </div>
                       </div>
-                    </td>
-                    <td>
-                      <div class="fw-medium">{{ product.name }}</div>
-                      <small class="text-muted">{{ $t("common.id") }}: {{ product.id }}</small>
-                    </td>
-                    <td>
-                      <span class="category-badge">{{ product.category?.name || $t("products.uncategorized") }}</span>
-                    </td>
-                    <td>
-                      <div class="price-badge">
-                        <template v-if="product.variants?.length">
-                          {{ formatPriceRange(product.variants) }}
-                        </template>
-                        <template v-else>
-                          {{ formatCurrency(product.price) }}
-                        </template>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="stock-badge">
-                        <template v-if="product.variants?.length">
-                          {{ getTotalStock(product.variants) }}
-                        </template>
-                        <template v-else>
-                          {{ product.stock }}
-                        </template>
-                      </div>
-                    </td>
-                    <td>
-                      <span :class="getStatusBadgeClass(product.active)">
-                        {{
-                          product.active
-                            ? $t("common.status.active")
-                            : $t("common.status.inactive")
-                        }}
-                      </span>
-                    </td>
-                    <td>
-                      <div class="d-flex justify-content-center gap-2">
-                        <button
-                          class="btn btn-info btn-sm mr-2"
-                          @click="editProduct(product)"
-                        >
-                          <i class="fas fa-edit"></i>
-                        </button>
-                        <button
-                          class="btn btn-sm btn-danger"
-                          @click="deleteProduct(product.id)"
-                          :disabled="isLoading"
-                          :title="$t('common.delete')"
-                        >
-                          <i class="fas fa-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="fw-medium">
+                      <router-link 
+                        :to="{ name: 'product-detail', params: { id: product.id }}"
+                        class="text-primary"
+                      >
+                        {{ product.name }}
+                      </router-link>
+                    </div>
+                    <small class="text-muted">{{ $t("common.id") }}: {{ product.id }}</small>
+                  </td>
+                  <td>
+                    <span class="category-badge">{{ product.category?.name || $t("products.uncategorized") }}</span>
+                  </td>
+                  <td>
+                    <div class="price-badge">
+                      <template v-if="product.variants?.length">
+                        {{ formatPriceRange(product.variants) }}
+                      </template>
+                      <template v-else>
+                        {{ formatCurrency(product.price) }}
+                      </template>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="stock-badge">
+                      <template v-if="product.variants?.length">
+                        {{ getTotalStock(product.variants) }}
+                      </template>
+                      <template v-else>
+                        {{ product.stock }}
+                      </template>
+                    </div>
+                  </td>
+                  <td>
+                    <span :class="getStatusBadgeClass(product.active)">
+                      {{
+                        product.active
+                          ? $t("common.status.active")
+                          : $t("common.status.inactive")
+                      }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex justify-content-center gap-2">
+                      <button
+                        class="btn btn-info btn-sm mr-2"
+                        @click="editProduct(product)"
+                      >
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button
+                        class="btn btn-sm btn-danger"
+                        @click="deleteProduct(product.id)"
+                        :disabled="isLoading"
+                        :title="$t('common.delete')"
+                      >
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
 
-          <div class="card-footer clearfix">
-            <pagination
-              v-if="products.total > products.per_page"
-              :total="products.total"
-              :per-page="products.per_page"
-              :current-page="products.current_page"
-              :links="products.links"
-              @page-changed="handlePageChange"
-            />
-          </div>
+        <div class="card-footer clearfix">
+          <pagination
+            v-if="products.total > products.per_page"
+            :total="products.total"
+            :per-page="products.per_page"
+            :current-page="products.current_page"
+            :links="products.links"
+            @page-changed="handlePageChange"
+          />
         </div>
       </div>
     </div>
@@ -221,7 +210,6 @@ import Pagination from "@/components/Pagination.vue";
 export default {
   name: "ProductsList",
   components: { Pagination },
-
   setup() {
     const store = useStore();
     const router = useRouter();

@@ -14,6 +14,7 @@ import OrderDetails from '../views/orders/OrderDetails.vue'
 import ProductsList from '../views/products/ProductsList.vue'
 import ProductForm from '../views/products/ProductForm.vue'
 import ProductEdit from '../views/products/ProductEdit.vue'
+import ProductDetail from '../views/products/ProductDetail.vue'
 import Reports from '../views/reports/Reports.vue'
 import CategoriesList from '../views/categories/CategoriesList.vue'
 import CategoriesDetail from '../views/categories/CategoriesDetail.vue'
@@ -51,6 +52,11 @@ const routes = [
         path: 'products',
         name: 'products',
         component: ProductsList
+      },
+      {
+        path: 'products/:id',
+        name: 'product-detail',
+        component: ProductDetail
       },
       {
         path: 'products/create',

@@ -8,6 +8,39 @@ export default {
     reports: 'Reports',
     categories: 'Categories'
   },
+  products: {
+    "basic_info": "Basic Information",
+    "variants": "Variants",
+    "sku": "SKU",
+    "attributes": "Attributes",
+    "delete_confirm_title": "Delete Product",
+    "delete_confirm_text": "Are you sure you want to delete this product?",
+    "delete_success": "Product has been deleted successfully",
+    "delete_error": "Error deleting product",
+    "title": "Products",
+    "add_product": "Add Product",
+    "edit_product": "Edit Product",
+    "name": "Name",
+    "category": "Category",
+    "price": "Price",
+    "stock": "Stock",
+    "description": "Description",
+    "images": "Images",
+    "featured": "Featured",
+    "rating": "Rating",
+    "favorites": "Favorites",
+    "uncategorized": "Uncategorized",
+    "no_products": "No products found",
+    "search_placeholder": "Search products...",
+    "table": {
+      image: 'Image',
+      name: 'Name',
+      category: 'Category',
+      price: 'Price',
+      stock: 'Stock',
+      status: 'Status'
+    }
+  },
   auth: {
     login: 'Login',
     logout: 'Logout',
@@ -52,21 +85,6 @@ export default {
     filterable: 'Filterable',
     yes: 'Yes',
     no: 'No'
-  },
-  products: {
-    title: 'Products',
-    add_product: 'Add Product',
-    search_placeholder: 'Search products...',
-    no_products: 'No products found',
-    uncategorized: 'Uncategorized',
-    table: {
-      image: 'Image',
-      name: 'Name',
-      category: 'Category',
-      price: 'Price',
-      stock: 'Stock',
-      status: 'Status'
-    }
   },
   categories: {
     title: 'Categories',
@@ -295,68 +313,68 @@ export default {
     }
   },
   
-order_details: {
-  order_info: {
-    title: "Order Information",
-    order_number: "Order Number",
-    status: "Status",
-    update_status: "Update Status",
-    payment_status: "Payment Status",
-    created_at: "Created At",
-    total_amount: "Total Amount",
-    delivery_cost: "Delivery Cost",
-    total_discount: "Total Discount"
+  order_details: {
+    order_info: {
+      title: "Order Information",
+      order_number: "Order Number",
+      status: "Status",
+      update_status: "Update Status",
+      payment_status: "Payment Status",
+      created_at: "Created At",
+      total_amount: "Total Amount",
+      delivery_cost: "Delivery Cost",
+      total_discount: "Total Discount"
+    },
+    customer_info: {
+      title: "Customer Information",
+      name: "Name",
+      email: "Email",
+      phone: "Phone"
+    },
+    delivery_info: {
+      title: "Delivery Information",
+      name: "Recipient Name",
+      phone: "Recipient Phone",
+      address: "Address",
+      method: "Delivery Method",
+      comment: "Delivery Comment"
+    },
+    order_items: {
+      title: "Order Items",
+      product: "Product",
+      price: "Price",
+      quantity: "Quantity",
+      total: "Total",
+      subtotal: "Subtotal",
+      delivery_cost: "Delivery Cost",
+      discount: "Discount"
+    },
+    status_history: {
+      title: "Status History",
+      date: "Date",
+      from: "From",
+      to: "To",
+      comment: "Comment"
+    },
+    modal: {
+      title: "Update Order Status",
+      status: "Status",
+      tracking_number: "Tracking Number",
+      notes: "Notes",
+      update: "Update"
+    },
+    messages: {
+      update_success: "Order status updated successfully"
+    }
   },
-  customer_info: {
-    title: "Customer Information",
-    name: "Name",
-    email: "Email",
-    phone: "Phone"
-  },
-  delivery_info: {
-    title: "Delivery Information",
-    name: "Recipient Name",
-    phone: "Recipient Phone",
-    address: "Address",
-    method: "Delivery Method",
-    comment: "Delivery Comment"
-  },
-  order_items: {
-    title: "Order Items",
-    product: "Product",
-    price: "Price",
-    quantity: "Quantity",
-    total: "Total",
-    subtotal: "Subtotal",
-    delivery_cost: "Delivery Cost",
-    discount: "Discount"
-  },
-  status_history: {
-    title: "Status History",
-    date: "Date",
-    from: "From",
-    to: "To",
-    comment: "Comment"
-  },
-  modal: {
-    title: "Update Order Status",
-    status: "Status",
-    tracking_number: "Tracking Number",
-    notes: "Notes",
-    update: "Update"
-  },
-  messages: {
-    update_success: "Order status updated successfully"
-  }
-},
-orders: {
-  statuses: {
-    pending: "Pending",
-    processing: "Processing",
-    shipped: "Shipped",
-    delivered: "Delivered",
-    cancelled: "Cancelled"
-  }
+  orders: {
+    statuses: {
+      pending: "Pending",
+      processing: "Processing",
+      shipped: "Shipped",
+      delivered: "Delivered",
+      cancelled: "Cancelled"
+    }
     
   }
   
