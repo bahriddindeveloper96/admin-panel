@@ -66,8 +66,22 @@
                 </div>
               </div>
 
+              <!-- Attributes -->
+              <div v-if="category.attributes?.length" class="attributes">
+                <h4 class="attributes-title">Attributes</h4>
+                <ul class="attr-list">
+                  <li v-for="attr in category.attributes" :key="attr.id" class="attr-item">
+                    <strong class="attr-name">{{ attr.name }}</strong>
+                    <span class="attr-type">({{ attr.type }})</span>
+                    <span v-if="Array.isArray(attr.options) && attr.options.length" class="options-count">
+                      - {{ attr.options.length }} options
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
               <!-- Translations -->
-              <div class="translations">
+              <div v-if="category.translations?.length" class="translations">
                 <div v-for="translation in category.translations" 
                      :key="translation.id" 
                      class="translation-item">
@@ -150,7 +164,7 @@ export default defineComponent({
     const { t, locale } = useI18n()
     const router = useRouter()
 
-    const categories = computed(() => store.getters['categories/getCategories'])
+    const categories = computed(() => store.getters['categories/getLocalizedCategories'])
     const loading = computed(() => store.getters['categories/isLoading'])
     const error = computed(() => store.getters['categories/getError'])
 
@@ -166,6 +180,8 @@ export default defineComponent({
     }
 
     const getTranslationName = (category) => {
+      // After store localization, prefer direct fields
+      if (category?.name) return category.name
       if (!category?.translations?.length) return ''
       return category.translations.find(t => t.locale === locale.value)?.name ||
              category.translations.find(t => t.locale === 'en')?.name ||
@@ -173,6 +189,7 @@ export default defineComponent({
     }
 
     const getTranslationDescription = (category) => {
+      if (category?.description) return category.description
       if (!category?.translations?.length) return ''
       return category.translations.find(t => t.locale === locale.value)?.description ||
              category.translations.find(t => t.locale === 'en')?.description ||

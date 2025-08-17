@@ -19,16 +19,20 @@ const getters = {
     const currentLocale = i18n.global.locale
     return state.categories.map(category => ({
       ...category,
-      name: category.translations.find(t => t.locale === currentLocale)?.name || 
-            category.translations.find(t => t.locale === 'en')?.name || '',
-      description: category.translations.find(t => t.locale === currentLocale)?.description ||
-                  category.translations.find(t => t.locale === 'en')?.description || '',
+      name: (category.translations?.find(t => t.locale === currentLocale)?.name) ||
+            (category.translations?.find(t => t.locale === 'en')?.name) ||
+            category.name || '',
+      description: (category.translations?.find(t => t.locale === currentLocale)?.description) ||
+                   (category.translations?.find(t => t.locale === 'en')?.description) ||
+                   category.description || '',
       children: category.children ? category.children.map(child => ({
         ...child,
-        name: child.translations.find(t => t.locale === currentLocale)?.name ||
-              child.translations.find(t => t.locale === 'en')?.name || '',
-        description: child.translations.find(t => t.locale === currentLocale)?.description ||
-                    child.translations.find(t => t.locale === 'en')?.description || ''
+        name: (child.translations?.find(t => t.locale === currentLocale)?.name) ||
+              (child.translations?.find(t => t.locale === 'en')?.name) ||
+              child.name || '',
+        description: (child.translations?.find(t => t.locale === currentLocale)?.description) ||
+                     (child.translations?.find(t => t.locale === 'en')?.description) ||
+                     child.description || ''
       })) : []
     }))
   },
@@ -36,12 +40,12 @@ const getters = {
   getLocalizedCategory: (state) => {
     if (!state.category) return null
     const currentLocale = i18n.global.locale
-    const translation = state.category.translations.find(t => t.locale === currentLocale) ||
-                       state.category.translations.find(t => t.locale === 'en')
+    const translation = state.category.translations?.find(t => t.locale === currentLocale) ||
+                       state.category.translations?.find(t => t.locale === 'en')
     return {
       ...state.category,
-      name: translation?.name || '',
-      description: translation?.description || ''
+      name: translation?.name || state.category.name || '',
+      description: translation?.description || state.category.description || ''
     }
   }
 }
@@ -52,10 +56,14 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       commit('CLEAR_ERROR')
-      const response = await axios.get('/admin/categories')
-      console.log('API Response:', response.data)
-      if (response.data?.success && Array.isArray(response.data.data)) {
-        commit('SET_CATEGORIES', response.data.data)
+      const response = await axios.get('/api/admin/categories')
+      console.log('Categories API Response:', response.data)
+      // Support both raw array and { data: [...] } formats
+      const payload = Array.isArray(response.data)
+        ? response.data
+        : (Array.isArray(response.data?.data) ? response.data.data : null)
+      if (Array.isArray(payload)) {
+        commit('SET_CATEGORIES', payload)
       } else {
         commit('SET_ERROR', 'Invalid data format received from server')
       }
@@ -73,9 +81,10 @@ const actions = {
   async fetchCategory({ commit }, id) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.get(`/admin/categories/${id}`)
-      if (response.data?.success && response.data.data) {
-        commit('SET_CATEGORY', response.data.data)
+      const response = await axios.get(`/api/admin/categories/${id}`)
+      const item = response.data?.data ?? response.data
+      if (item) {
+        commit('SET_CATEGORY', item)
       }
       return response.data
     } catch (error) {
@@ -90,7 +99,7 @@ const actions = {
   async createCategory({ commit, dispatch }, categoryData) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.post('/admin/categories', categoryData)
+      const response = await axios.post('/api/admin/categories', categoryData)
       if (response.data?.success) {
         await dispatch('fetchCategories')
       }
@@ -107,7 +116,7 @@ const actions = {
   async updateCategory({ commit, dispatch }, { id, categoryData }) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.put(`/admin/categories/${id}`, categoryData)
+      const response = await axios.put(`/api/admin/categories/${id}`, categoryData)
       if (response.data?.success) {
         await dispatch('fetchCategories')
       }
@@ -124,7 +133,7 @@ const actions = {
   async deleteCategory({ commit }, id) {
     try {
       commit('SET_LOADING', true)
-      const response = await axios.delete(`/admin/categories/${id}`)
+      const response = await axios.delete(`/api/admin/categories/${id}`)
       if (response.data?.success) {
         commit('REMOVE_CATEGORY', id)
       }

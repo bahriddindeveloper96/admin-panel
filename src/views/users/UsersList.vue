@@ -229,6 +229,9 @@ export default {
         })
         users.value = response.data
         total.value = response.total
+        // Sync pagination from API response
+        if (response.current_page) currentPage.value = response.current_page
+        if (response.per_page) perPage.value = response.per_page
       } catch (error) {
         console.error('Error fetching users:', error)
         Swal.fire('Error', 'Failed to fetch users', 'error')

@@ -53,49 +53,27 @@
                   </div>
                 </div>
 
-                <!-- Variants -->
-                <div class="variants-info">
+                <!-- Attributes -->
+                <div class="attributes-info">
                   <h5 class="card-title mb-3">
-                    <i class="fas fa-cubes text-primary me-2"></i>
-                    {{ $t('products.variants') }}
+                    <i class="fas fa-list-ul text-primary me-2"></i>
+                    {{ $t('products.attributes') }}
                   </h5>
-                  <div class="table-responsive">
-                    <table class="table table-hover">
-                      <thead>
-                        <tr>
-                          <th>SKU</th>
-                          <th>{{ $t('products.price') }}</th>
-                          <th>{{ $t('products.stock') }}</th>
-                          <th>{{ $t('products.attributes') }}</th>
-                          <th>{{ $t('common.status') }}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="variant in product.variants" :key="variant.id">
-                          <td>{{ variant.sku }}</td>
-                          <td>{{ formatPrice(variant.price) }}</td>
-                          <td>{{ variant.stock }}</td>
-                          <td>
-                            <span 
-                              v-for="(value, index) in variant.attribute_values" 
-                              :key="index"
-                              class="badge bg-info me-1"
-                            >
-                              {{ value }}
-                            </span>
-                          </td>
-                          <td>
-                            <span 
-                              class="badge"
-                              :class="variant.active ? 'bg-success' : 'bg-danger'"
-                            >
-                              {{ variant.active ? $t('common.active') : $t('common.inactive') }}
-                            </span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  <div v-if="product.attributes && product.attributes.length" class="row g-3">
+                    <div 
+                      v-for="item in product.attributes"
+                      :key="item.id"
+                      class="col-12 col-md-6"
+                    >
+                      <div class="info-item d-flex flex-column h-100">
+                        <label class="text-muted mb-1">{{ getAttributeName(item) }}</label>
+                        <div class="fw-bold">
+                          <span class="badge bg-info">{{ formatAttributeDisplay(item) }}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                  <div v-else class="text-muted">{{ $t('common.no_data') }}</div>
                 </div>
               </div>
             </div>
@@ -118,6 +96,13 @@
                   >
                     {{ product.active ? $t('common.active') : $t('common.inactive') }}
                   </span>
+                  <button 
+                    class="btn btn-sm btn-outline-primary ms-2"
+                    @click="changeStatus"
+                    :disabled="loading"
+                  >
+                    {{ product.active ? $t('products.deactivate') : $t('products.activate') }}
+                  </button>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <span>{{ $t('products.featured') }}:</span>
@@ -172,17 +157,8 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useStore } from 'vuex'
-import axios from 'axios'
-
-// Create axios instance with base URL and auth header
-const createApi = (token) => {
-  return axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  })
-}
+// axios removed; we will use Vuex store action which already handles base URL and auth
+import Swal from 'sweetalert2'
 
 export default {
   name: 'ProductDetail',
@@ -190,12 +166,10 @@ export default {
   setup() {
     const route = useRoute()
     const store = useStore()
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
     const product = ref({})
     const loading = ref(true)
 
-    // Get API instance with current token
-    const api = createApi(store.state.token)
 
     // Format price with currency
     const formatPrice = (price) => {
@@ -203,6 +177,30 @@ export default {
         style: 'currency',
         currency: 'UZS'
       }).format(price)
+    }
+
+    const changeStatus = async () => {
+      if (!product.value?.id) return
+      const newStatus = product.value.active ? 'inactive' : 'aktiv'
+      try {
+        const result = await Swal.fire({
+          title: newStatus === 'aktiv' ? t('common.confirm_activate') : t('common.confirm_deactivate'),
+          text: t('common.are_you_sure'),
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: t('common.yes'),
+          cancelButtonText: t('common.cancel')
+        })
+        if (!result.isConfirmed) return
+        const updated = await store.dispatch('products/updateProductStatus', { id: product.value.id, status: newStatus })
+        if (updated) {
+          product.value = updated
+          Swal.fire({ icon: 'success', title: t('common.success'), timer: 1200, showConfirmButton: false })
+        }
+      } catch (error) {
+        console.error(error)
+        showNotification(t('common.error_saving') || 'Error', true)
+      }
     }
 
     // Show notification helper
@@ -221,13 +219,88 @@ export default {
       setTimeout(() => alertDiv.remove(), 5000)
     }
 
-    // Fetch product details
+    // Format attribute values for display
+    const formatAttributeValue = (val) => {
+      if (val === null || val === undefined) return '-'
+      if (typeof val === 'boolean') return val ? t('common.yes') : t('common.no')
+      if (Array.isArray(val)) {
+        return val.map(v => {
+          if (v === null || v === undefined) return '-'
+          if (typeof v === 'object') return v.name || v.label || v.value || JSON.stringify(v)
+          return String(v)
+        }).join(', ')
+      }
+      if (typeof val === 'object') {
+        return val.name || val.label || val.value || JSON.stringify(val)
+      }
+      return String(val)
+    }
+
+    // Try to parse JSON-like strings safely
+    const parsePossiblyJson = (value) => {
+      if (typeof value !== 'string') return value
+      const trimmed = value.trim()
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try { return JSON.parse(trimmed) } catch { return value }
+      }
+      return value
+    }
+
+    // Get localized attribute name
+    const getAttributeName = (item) => {
+      const attr = item?.attribute || {}
+      if (attr.translated_name) return attr.translated_name
+      if (attr.name && typeof attr.name === 'object') {
+        return attr.name[locale.value] || attr.name.en || Object.values(attr.name)[0]
+      }
+      return attr.name || '-'
+    }
+
+    // Format attribute item value based on attribute type and possible JSON
+    const formatAttributeDisplay = (item) => {
+      if (!item) return '-'
+      const attrType = item.attribute?.type
+      let val = item.value
+      // Convert backend quirks like "[object Object]" to '-'
+      if (val === '[object Object]') return t('common.no')
+      // Parse JSON if any
+      val = parsePossiblyJson(val)
+
+      // Boolean attributes: normalize common truthy/falsey representations
+      if (attrType === 'boolean') {
+        const truthy = ['true', '1', 'yes', 'ha', 'bor']
+        const falsy = ['false', '0', 'no', 'yo\'q', 'yoq']
+        if (typeof val === 'string') {
+          const low = val.toLowerCase()
+          if (truthy.includes(low)) return t('common.yes')
+          if (falsy.includes(low)) return t('common.no')
+        }
+        if (val === true || val === 1) return t('common.yes')
+        if (val === false || val === 0) return t('common.no')
+        return t('common.no')
+      }
+
+      // Arrays -> comma separated
+      if (Array.isArray(val)) {
+        return val.map(v => (typeof v === 'object' ? (v.name || v.label || v.value || JSON.stringify(v)) : String(v))).join(', ')
+      }
+
+      // Objects -> friendly string
+      if (val && typeof val === 'object') {
+        return val.name || val.label || val.value || JSON.stringify(val)
+      }
+
+      // Primitive -> as is
+      return String(val ?? '-')
+    }
+
+    // Fetch product details via Vuex (normalized)
     const fetchProduct = async () => {
       try {
         loading.value = true
-        const response = await api.get(`/admin/products/${route.params.id}`)
-        if (response.data && response.data.data) {
-          product.value = response.data.data
+        const data = await store.dispatch('products/fetchProduct', route.params.id)
+        if (data) {
+          product.value = data
         }
       } catch (error) {
         console.error('Error fetching product:', error)
@@ -245,6 +318,10 @@ export default {
       product,
       loading,
       formatPrice,
+      formatAttributeValue,
+      getAttributeName,
+      formatAttributeDisplay,
+      changeStatus,
       t
     }
   }

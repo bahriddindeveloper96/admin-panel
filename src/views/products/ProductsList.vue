@@ -153,7 +153,12 @@
                     </div>
                   </td>
                   <td>
-                    <span :class="getStatusBadgeClass(product.active)">
+                    <span 
+                      :class="getStatusBadgeClass(product.active)"
+                      class="cursor-pointer"
+                      :title="$t('products.change_status')"
+                      @click="changeStatus(product)"
+                    >
                       {{
                         product.active
                           ? $t("common.status.active")
@@ -204,6 +209,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import Swal from "sweetalert2";
 import Pagination from "@/components/Pagination.vue";
 
@@ -213,6 +219,7 @@ export default {
   setup() {
     const store = useStore();
     const router = useRouter();
+    const { t } = useI18n();
     const base_url = import.meta.env.VITE_API_URL || '';
     const selectedProducts = ref([]);
     const filters = ref({
@@ -235,6 +242,26 @@ export default {
           title: "Error",
           text: error.message,
         });
+      }
+    };
+
+    const changeStatus = async (product) => {
+      if (isLoading.value) return;
+      const newStatus = product.active ? 'inactive' : 'aktiv';
+      try {
+        const result = await Swal.fire({
+          title: newStatus === 'aktiv' ? t('common.confirm_activate') : t('common.confirm_deactivate'),
+          text: t('common.are_you_sure'),
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: t('common.yes'),
+          cancelButtonText: t('common.cancel')
+        });
+        if (!result.isConfirmed) return;
+        await store.dispatch('products/updateProductStatus', { id: product.id, status: newStatus });
+        Swal.fire({ icon: 'success', title: t('common.success'), timer: 1200, showConfirmButton: false });
+      } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Failed to update status' });
       }
     };
 
@@ -442,6 +469,7 @@ export default {
       deleteProduct,
       deleteSelected,
       exportProducts,
+      changeStatus,
       toggleSelectAll,
       formatCurrency,
       formatPriceRange,

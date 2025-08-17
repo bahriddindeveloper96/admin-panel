@@ -93,14 +93,16 @@ export default createStore({
     // Auth actions
     async login({ commit }, credentials) {
       try {
-        console.log('Login request to:', '/admin/login')
+        console.log('Login request to:', '/api/auth/login')
         console.log('Credentials:', credentials)
-        const { data } = await axios.post('/admin/login', credentials)
+        const { data } = await axios.post('/api/auth/login', credentials)
         console.log('Login response:', data)
-        commit('SET_TOKEN', data.token)
+        // Expecting response: { user: {...}, authorization: { token: '...', type: 'bearer' } }
+        const token = data?.authorization?.token
+        commit('SET_TOKEN', token)
         commit('SET_USER', data.user)
         // Set token in axios default headers
-        axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
         return data
       } catch (error) {
         console.error('Login error details:', {
@@ -116,7 +118,7 @@ export default createStore({
     async logout({ commit }) {
       try {
         // API call to logout
-        await axios.post('/auth/logout')
+        await axios.post('/api/auth/logout')
       } catch (error) {
         console.error('Logout error:', error)
       } finally {
@@ -131,7 +133,7 @@ export default createStore({
 
     async getUser({ commit }) {
       try {
-        const { data } = await axios.get('/admin/auth/user')
+        const { data } = await axios.get('/api/auth/user')
         commit('SET_USER', data)
         return data
       } catch (error) {
@@ -204,7 +206,8 @@ export default createStore({
     // Users actions
     async fetchUsers({ commit }, params = {}) {
       try {
-        const { data } = await axios.get('/admin/users', { params })
+        const { data } = await axios.get('/api/admin/users', { params })
+        // data shape from backend: { current_page, data: [...], total, per_page, ... }
         commit('SET_USERS', data.data)
         commit('SET_TOTAL_USERS', data.total)
         return data
@@ -215,7 +218,7 @@ export default createStore({
 
     async createUser({ commit }, userData) {
       try {
-        const { data } = await axios.post('/admin/users', userData)
+        const { data } = await axios.post('/api/admin/users', userData)
         commit('ADD_USER', data.user)
         return data
       } catch (error) {
@@ -225,7 +228,7 @@ export default createStore({
 
     async updateUser({ commit }, { id, userData }) {
       try {
-        const { data } = await axios.put(`/admin/users/${id}`, userData)
+        const { data } = await axios.put(`/api/admin/users/${id}`, userData)
         commit('UPDATE_USER', data.user)
         return data
       } catch (error) {
@@ -235,7 +238,7 @@ export default createStore({
 
     async deleteUser({ commit }, id) {
       try {
-        await axios.delete(`/admin/users/${id}`)
+        await axios.delete(`/api/admin/users/${id}`)
         commit('DELETE_USER', id)
       } catch (error) {
         throw error
