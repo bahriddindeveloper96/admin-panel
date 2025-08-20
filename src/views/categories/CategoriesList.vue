@@ -107,10 +107,10 @@
 
             <!-- Actions -->
             <div class="category-actions">
-              <button class="btn-edit">
+              <button class="btn-edit" @click="navigateToDetail(category.id)">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="btn-delete">
+              <button class="btn-delete" @click="confirmDelete(category)">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
@@ -128,7 +128,7 @@
                 </div> -->
                 <div class="subcategory-info">
                   <div class="subcategory-header">
-                    <h4>{{ getTranslationName(child) }}</h4>
+                    <h4 class="subcategory-name clickable" @click="navigateToDetail(child.id)">{{ getTranslationName(child) }}</h4>
                     <span class="subcategory-id">#{{ child.id }}</span>
                   </div>
                   <p>{{ getTranslationDescription(child) }}</p>
@@ -204,6 +204,18 @@ export default defineComponent({
       router.push({ name: 'category-create' })
     }
 
+    const confirmDelete = async (category) => {
+      const name = getTranslationName(category) || `#${category.id}`
+      if (!window.confirm(`${t('common.confirm_delete') || 'Delete'}: ${name}?`)) return
+      try {
+        await store.dispatch('categories/deleteCategory', category.id)
+        // optional: refetch to sync children trees
+        await store.dispatch('categories/fetchCategories')
+      } catch (e) {
+        alert(e?.response?.data?.message || (t('common.delete_failed') || 'Delete failed'))
+      }
+    }
+
     onMounted(() => {
       store.dispatch('categories/fetchCategories')
     })
@@ -217,6 +229,7 @@ export default defineComponent({
       getTranslationDescription,
       navigateToDetail,
       navigateToCreate,
+      confirmDelete,
       t
     }
   }
@@ -504,6 +517,15 @@ export default defineComponent({
   margin: 0;
   font-size: 16px;
   color: #2c3e50;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.subcategory-name:hover {
+  color: #409EFF;
+  text-decoration: underline;
 }
 
 .subcategory-id {

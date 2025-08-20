@@ -18,6 +18,21 @@
             <i class="fas fa-trash"></i> {{ $t('common.delete') }}
           </button>
         </div>
+
+      <!-- Subcategories Section -->
+      <div class="subcategories mt-4" v-if="category.children && category.children.length">
+        <div class="card">
+          <div class="card-header fw-bold">{{ $t('categories.subcategories') || 'Subcategories' }}</div>
+          <div class="card-body">
+            <ul class="list-group">
+              <li v-for="child in category.children" :key="child.id" class="list-group-item d-flex justify-content-between align-items-center">
+                <span class="clickable" @click="navigateToDetail(child.id)">{{ child.name || ('#' + child.id) }}</span>
+                <span class="badge bg-light text-muted">#{{ child.id }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
       </div>
 
       <!-- Main Info Section -->
@@ -60,51 +75,47 @@
       </div>
 
       <!-- Attribute Groups Section -->
-      <div class="attribute-groups mt-4">
-        <div class="accordion" id="attributeGroups">
-          <div class="accordion-item" v-for="(group, index) in category.attribute_groups" :key="group.id">
-            <h2 class="accordion-header" :id="'heading' + group.id">
-              <button class="accordion-button" type="button" data-bs-toggle="collapse" 
-                      :data-bs-target="'#collapse' + group.id" 
-                      :aria-expanded="index === 0" 
-                      :aria-controls="'collapse' + group.id">
-                {{ group.name }}
-              </button>
-            </h2>
-            <div :id="'collapse' + group.id" class="accordion-collapse collapse" 
-                 :class="{ 'show': index === 0 }"
-                 :aria-labelledby="'heading' + group.id" 
-                 data-bs-parent="#attributeGroups">
-              <div class="accordion-body">
-                <div class="table-responsive">
-                  <table class="table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>{{ $t('common.name') }}</th>
-                        <th>{{ $t('common.type') }}</th>
-                        <th>{{ $t('common.required') }}</th>
-                        <th>{{ $t('common.filterable') }}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="attr in group.attributes" :key="attr.id">
-                        <td>{{ getAttributeTranslation(attr) }}</td>
-                        <td>{{ attr.type }}</td>
-                        <td>
-                          <span :class="['badge', attr.required ? 'bg-danger' : 'bg-secondary']">
-                            {{ attr.required ? $t('common.yes') : $t('common.no') }}
-                          </span>
-                        </td>
-                        <td>
-                          <span :class="['badge', attr.filterable ? 'bg-success' : 'bg-secondary']">
-                            {{ attr.filterable ? $t('common.yes') : $t('common.no') }}
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+      <div class="attribute-groups mt-4" v-if="category.attributes && category.attributes.length">
+        <div class="card">
+          <div class="card-header fw-bold">{{ $t('categories.attributes') || 'Attributes' }}</div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>{{ $t('common.name') }}</th>
+                    <th>{{ $t('common.type') }}</th>
+                    <th>{{ $t('common.required') }}</th>
+                    <th>{{ $t('common.filterable') }}</th>
+                    <th>Options</th>
+                    <th>Validation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="attr in category.attributes" :key="attr.id">
+                    <td>{{ attr.name }}</td>
+                    <td>{{ attr.type }}</td>
+                    <td>
+                      <span :class="['badge', attr.is_required ? 'bg-danger' : 'bg-secondary']">
+                        {{ attr.is_required ? ($t('common.yes') || 'Yes') : ($t('common.no') || 'No') }}
+                      </span>
+                    </td>
+                    <td>
+                      <span :class="['badge', attr.is_filterable ? 'bg-success' : 'bg-secondary']">
+                        {{ attr.is_filterable ? ($t('common.yes') || 'Yes') : ($t('common.no') || 'No') }}
+                      </span>
+                    </td>
+                    <td>
+                      <span v-if="parsedOptions(attr).length">{{ parsedOptions(attr).join(', ') }}</span>
+                      <span v-else>-</span>
+                    </td>
+                    <td>
+                      <code v-if="attr.validation_rules">{{ prettyValidation(attr.validation_rules) }}</code>
+                      <span v-else>-</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -116,6 +127,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import axios from 'axios'
 
 export default {
@@ -123,6 +135,7 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
+    const { t } = useI18n()
     const category = ref(null)
     const loading = ref(true)
     const error = ref(null)
@@ -130,8 +143,8 @@ export default {
     const fetchCategory = async () => {
       try {
         loading.value = true
-        const response = await axios.get(`/admin/categories/${route.params.id}`)
-        category.value = response.data
+        const response = await axios.get(`/api/admin/categories/${route.params.id}`)
+        category.value = response.data?.data ?? response.data
       } catch (err) {
         error.value = err.response?.data?.message || 'Error loading category'
         showError(error.value)
@@ -144,19 +157,22 @@ export default {
       router.push(`/categories/${route.params.id}/edit`)
     }
 
+    const navigateToDetail = (id) => {
+      router.push({ name: 'category-details', params: { id: id.toString() } })
+    }
+
     const confirmDelete = () => {
-      if (confirm($t('common.confirm_delete'))) {
-        deleteCategory()
-      }
+      const message = t('common.confirm_delete') || 'Are you sure you want to delete?'
+      if (window.confirm(message)) deleteCategory()
     }
 
     const deleteCategory = async () => {
       try {
-        await axios.delete(`/admin/categories/${route.params.id}`)
-        showSuccess($t('common.deleted_successfully'))
+        await axios.delete(`/api/admin/categories/${route.params.id}`)
+        showSuccess(t('common.deleted_successfully') || 'Deleted successfully')
         router.push('/categories')
       } catch (err) {
-        showError(err.response?.data?.message || 'Error deleting category')
+        showError(err.response?.data?.message || (t('common.delete_failed') || 'Error deleting category'))
       }
     }
 
@@ -170,10 +186,18 @@ export default {
       alert(message)
     }
 
-    const getAttributeTranslation = (attribute) => {
-      const locale = 'uz' // You should get this from your i18n setup
-      const translation = attribute.translations.find(t => t.locale === locale)
-      return translation ? translation.name : attribute.name
+    const parsedOptions = (attr) => {
+      // options may be array or JSON string
+      if (!attr || attr.options == null) return []
+      if (Array.isArray(attr.options)) return attr.options
+      if (typeof attr.options === 'string') {
+        try { const arr = JSON.parse(attr.options); return Array.isArray(arr) ? arr : [] } catch { return [] }
+      }
+      return []
+    }
+
+    const prettyValidation = (rules) => {
+      try { return JSON.stringify(rules) } catch { return '' }
     }
 
     onMounted(fetchCategory)
@@ -183,8 +207,10 @@ export default {
       loading,
       error,
       editCategory,
+      navigateToDetail,
       confirmDelete,
-      getAttributeTranslation
+      parsedOptions,
+      prettyValidation
     }
   }
 }

@@ -16,37 +16,68 @@ const getters = {
   
   // New getters for localized data
   getLocalizedCategories: (state) => {
-    const currentLocale = i18n.global.locale
+    const currentLocale = i18n.global.locale.value
+    const pickLocalized = (entity) => {
+      // Prefer backend-provided translated fields
+      if (typeof entity?.translated_name === 'string' && entity.translated_name) {
+        return {
+          name: entity.translated_name,
+          description: entity.translated_description || ''
+        }
+      }
+
+      // If name/description are objects keyed by locale
+      if (entity && typeof entity.name === 'object' && entity.name !== null) {
+        const nameObj = entity.name || {}
+        const descObj = entity.description || {}
+        const fallbacks = ['en']
+        const name = nameObj[currentLocale] ?? nameObj[fallbacks.find(k => nameObj[k] != null)] ?? ''
+        const description = descObj[currentLocale] ?? descObj[fallbacks.find(k => descObj[k] != null)] ?? ''
+        return { name, description }
+      }
+
+      // Fallback to translations array shape
+      const tr = entity?.translations || []
+      const current = tr.find(t => t.locale === currentLocale)
+      const en = tr.find(t => t.locale === 'en')
+      return {
+        name: current?.name || en?.name || entity?.name || '',
+        description: current?.description || en?.description || entity?.description || ''
+      }
+    }
+
     return state.categories.map(category => ({
       ...category,
-      name: (category.translations?.find(t => t.locale === currentLocale)?.name) ||
-            (category.translations?.find(t => t.locale === 'en')?.name) ||
-            category.name || '',
-      description: (category.translations?.find(t => t.locale === currentLocale)?.description) ||
-                   (category.translations?.find(t => t.locale === 'en')?.description) ||
-                   category.description || '',
-      children: category.children ? category.children.map(child => ({
-        ...child,
-        name: (child.translations?.find(t => t.locale === currentLocale)?.name) ||
-              (child.translations?.find(t => t.locale === 'en')?.name) ||
-              child.name || '',
-        description: (child.translations?.find(t => t.locale === currentLocale)?.description) ||
-                     (child.translations?.find(t => t.locale === 'en')?.description) ||
-                     child.description || ''
-      })) : []
+      ...pickLocalized(category),
+      children: Array.isArray(category.children)
+        ? category.children.map(child => ({
+            ...child,
+            ...pickLocalized(child)
+          }))
+        : []
     }))
   },
   
   getLocalizedCategory: (state) => {
     if (!state.category) return null
-    const currentLocale = i18n.global.locale
-    const translation = state.category.translations?.find(t => t.locale === currentLocale) ||
-                       state.category.translations?.find(t => t.locale === 'en')
-    return {
-      ...state.category,
-      name: translation?.name || state.category.name || '',
-      description: translation?.description || state.category.description || ''
+    const currentLocale = i18n.global.locale.value
+    const c = state.category
+    // Prefer translated fields
+    if (typeof c?.translated_name === 'string' && c.translated_name) {
+      return { ...c, name: c.translated_name, description: c.translated_description || '' }
     }
+    // Object map shape
+    if (c && typeof c.name === 'object' && c.name !== null) {
+      const nameObj = c.name || {}
+      const descObj = c.description || {}
+      const name = nameObj[currentLocale] ?? nameObj.en ?? ''
+      const description = descObj[currentLocale] ?? descObj.en ?? ''
+      return { ...c, name, description }
+    }
+    // Translations array shape
+    const tr = c?.translations || []
+    const trans = tr.find(t => t.locale === currentLocale) || tr.find(t => t.locale === 'en')
+    return { ...c, name: trans?.name || c.name || '', description: trans?.description || c.description || '' }
   }
 }
 
@@ -100,7 +131,11 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       const response = await axios.post('/api/admin/categories', categoryData)
-      if (response.data?.success) {
+      const created = response.data?.data ?? response.data
+      if (created) {
+        commit('ADD_CATEGORY', created)
+      } else {
+        // As a fallback, refresh list
         await dispatch('fetchCategories')
       }
       return response.data
@@ -117,7 +152,10 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       const response = await axios.put(`/api/admin/categories/${id}`, categoryData)
-      if (response.data?.success) {
+      const updated = response.data?.data ?? response.data
+      if (updated) {
+        commit('UPDATE_CATEGORY', updated)
+      } else {
         await dispatch('fetchCategories')
       }
       return response.data
@@ -134,12 +172,28 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       const response = await axios.delete(`/api/admin/categories/${id}`)
-      if (response.data?.success) {
-        commit('REMOVE_CATEGORY', id)
-      }
+      commit('REMOVE_CATEGORY', id)
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Failed to delete category')
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  }
+  ,
+  // Add attributes to a category
+  async addCategoryAttributes({ commit }, { id, attributesPayload }) {
+    try {
+      commit('SET_LOADING', true)
+      const response = await axios.post(`/api/admin/categories/${id}/attributes`, attributesPayload)
+      const category = response.data?.category || response.data?.data || null
+      if (category) {
+        commit('UPDATE_CATEGORY', category)
+      }
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.response?.data?.message || 'Failed to add attributes')
       throw error
     } finally {
       commit('SET_LOADING', false)
@@ -153,6 +207,20 @@ const mutations = {
   },
   SET_CATEGORY(state, category) {
     state.category = category
+  },
+  ADD_CATEGORY(state, category) {
+    // Prepend new category and keep selected category in sync
+    state.categories = [category, ...state.categories]
+    state.category = category
+  },
+  UPDATE_CATEGORY(state, updatedCategory) {
+    const idx = state.categories.findIndex(c => c.id === updatedCategory.id)
+    if (idx !== -1) {
+      state.categories.splice(idx, 1, updatedCategory)
+    }
+    if (state.category?.id === updatedCategory.id) {
+      state.category = updatedCategory
+    }
   },
   REMOVE_CATEGORY(state, id) {
     state.categories = state.categories.filter(category => category.id !== id)

@@ -263,6 +263,62 @@
                             </div>
                           </div>
 
+                          <!-- Attribute Meta Controls -->
+                          <div class="row mb-3">
+                            <div class="col-md-4">
+                              <div class="form-group">
+                                <label class="form-label">
+                                  <i class="fas fa-sliders-h text-secondary"></i>
+                                  {{ $t('categories.type') || 'Type' }}
+                                </label>
+                                <select v-model="attribute.type" class="form-control custom-select">
+                                  <option value="select">Select</option>
+                                  <option value="number">Number</option>
+                                  <option value="text">Text</option>
+                                  <option value="boolean">Boolean</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div class="col-md-4">
+                              <div class="form-group">
+                                <label class="form-label">
+                                  <i class="fas fa-asterisk text-warning"></i>
+                                  {{ $t('categories.is_required') || 'Required' }}
+                                </label>
+                                <div>
+                                  <input type="checkbox" v-model="attribute.is_required"> {{ attribute.is_required ? ($t('common.yes') || 'Yes') : ($t('common.no') || 'No') }}
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-4">
+                              <div class="form-group">
+                                <label class="form-label">
+                                  <i class="fas fa-filter text-info"></i>
+                                  {{ $t('categories.is_filterable') || 'Filterable' }}
+                                </label>
+                                <div>
+                                  <input type="checkbox" v-model="attribute.is_filterable"> {{ attribute.is_filterable ? ($t('common.yes') || 'Yes') : ($t('common.no') || 'No') }}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Conditional Controls -->
+                          <div v-if="attribute.type === 'select'" class="form-group mb-3">
+                            <label class="form-label">
+                              <i class="fas fa-list text-primary"></i>
+                              {{ $t('categories.options') || 'Options (comma separated)' }}
+                            </label>
+                            <input v-model="attribute.optionsText" type="text" class="form-control" placeholder="red, blue, green">
+                          </div>
+                          <div v-else-if="attribute.type === 'number'" class="form-group mb-3">
+                            <label class="form-label">
+                              <i class="fas fa-sort-numeric-up text-primary"></i>
+                              {{ $t('categories.min_value') || 'Min value' }}
+                            </label>
+                            <input v-model.number="attribute.min" type="number" class="form-control" placeholder="0">
+                          </div>
+
                           <button 
                             type="button" 
                             class="btn btn-icon btn-danger"
@@ -399,7 +455,13 @@ export default {
                 uz: { name: '' },
                 ru: { name: '' },
                 en: { name: '' }
-              }
+              },
+              type: 'select',
+              is_required: false,
+              is_filterable: true,
+              // UI helper fields
+              optionsText: '', // comma-separated for select
+              min: null
             }
           ]
         }
@@ -413,7 +475,7 @@ export default {
 
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('/admin/categories')
+        const response = await axios.get('/api/admin/categories')
         if (Array.isArray(response.data)) {
           categories.value = response.data
         } else if (response.data.data) {
@@ -426,8 +488,18 @@ export default {
 
     const submitBasicInfo = async () => {
       try {
-        const response = await axios.post('/admin/categories', form)
-        createdCategoryId.value = response.data.category.id
+        // Map translations object to array as required by backend
+        const payload = {
+          translations: Object.keys(form.translations).map(locale => ({
+            locale,
+            name: form.translations[locale].name,
+            description: form.translations[locale].description
+          })),
+          parent_id: form.parent_id
+        }
+        const response = await axios.post('/api/admin/categories', payload)
+        const created = response.data?.data ?? response.data
+        createdCategoryId.value = created?.id
         currentStep.value = 2
       } catch (error) {
         console.error('Error creating category:', error)
@@ -437,19 +509,51 @@ export default {
 
     const submitAttributes = async () => {
       try {
-        // Format the data to match the API requirements
-        const formattedData = {
-          attribute_groups: attributeForm.attribute_groups.map(group => ({
-            name: group.name,
-            attributes: group.attributes.map(attr => ({
-              name: attr.name,
-              translations: attr.translations
-            }))
-          }))
+        if (!createdCategoryId.value) {
+          throw new Error('Category was not created yet')
         }
+        // Build attributes array to match backend API
+        const attributes = attributeForm.attribute_groups.flatMap(group =>
+          group.attributes.map(attr => {
+            const translations = Object.keys(attr.translations).map(locale => ({
+              locale,
+              name: attr.translations[locale].name
+            }))
+
+            const payloadAttr = {
+              translations,
+              type: attr.type,
+              is_required: !!attr.is_required,
+              is_filterable: !!attr.is_filterable,
+              options: null,
+              validation_rules: {}
+            }
+
+            if (attr.type === 'select') {
+              const options = (attr.optionsText || '')
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean)
+              payloadAttr.options = options.length ? options : null
+              if (options.length) payloadAttr.validation_rules = { in: options }
+            } else if (attr.type === 'number') {
+              payloadAttr.options = null
+              if (attr.min !== null && attr.min !== '' && !isNaN(Number(attr.min))) {
+                payloadAttr.validation_rules = { min: Number(attr.min) }
+              }
+            } else if (attr.type === 'text' || attr.type === 'boolean') {
+              payloadAttr.options = null
+              payloadAttr.validation_rules = {}
+            }
+
+            return payloadAttr
+          })
+        )
+
+        const formattedData = { attributes }
 
         // Send the formatted data to the API
-        await axios.post(`/admin/categories/${createdCategoryId.value}/attributes`, formattedData)
+        await axios.post(`/api/admin/categories/${createdCategoryId.value}/attributes`, formattedData)
         
         // Show success message
         store.dispatch('showMessage', {
@@ -496,7 +600,12 @@ export default {
           uz: { name: '' },
           ru: { name: '' },
           en: { name: '' }
-        }
+        },
+        type: 'select',
+        is_required: false,
+        is_filterable: true,
+        optionsText: '',
+        min: null
       })
     }
 
@@ -509,11 +618,22 @@ export default {
     }
 
     const getTranslationName = (category) => {
-      if (!category.translations) return category.name || `Category ${category.id}`
-      const translation = category.translations.find(t => t.locale === 'uz') || 
-                         category.translations.find(t => t.locale === 'en') ||
-                         category.translations.find(t => t.locale === 'ru')
-      return translation ? translation.name : category.name || `Category ${category.id}`
+      // Prefer backend-provided translated_name
+      if (typeof category?.translated_name === 'string' && category.translated_name) {
+        return category.translated_name
+      }
+      // If name is an object keyed by locale
+      if (category && typeof category.name === 'object' && category.name !== null) {
+        return category.name.uz || category.name.en || category.name.ru || `Category ${category.id}`
+      }
+      // Fallback to translations array
+      if (Array.isArray(category?.translations)) {
+        const t = category.translations.find(t => t.locale === 'uz') ||
+                  category.translations.find(t => t.locale === 'en') ||
+                  category.translations.find(t => t.locale === 'ru')
+        return t?.name || category?.name || `Category ${category.id}`
+      }
+      return category?.name || `Category ${category.id}`
     }
 
     const getLocaleIcon = (locale) => {
@@ -535,7 +655,8 @@ export default {
     }
 
     const getPaddingLeft = (level) => {
-      return `${level * 20}px`
+      const safeLevel = Number.isFinite(level) ? level : 0
+      return `${safeLevel * 20}px`
     }
 
     const setActiveLocale = (groupIndex, attrIndex, locale) => {
